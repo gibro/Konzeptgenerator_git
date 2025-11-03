@@ -2,13 +2,19 @@
 
 Eine webbasierte Datenbank zur Verwaltung und Planung von Seminarmethoden für die IG Metall. Das System ermöglicht es, Methodenkarten zu erstellen, zu verwalten und in einem interaktiven Seminarplaner zu organisieren.
 
-## Installation
+## Installation DB
    - erzeuge ein zip aus den vorliegenden Dateien, ohne README und AGENTS und LICENSE
    - Erstelle eine Datenbank-Aktivität in deinem Moodle und klicke auf speichern und anzeigen in der Aktivitätserstellung
    - Klicke auf Vorlagensatz importieren
    - Lade die erzeugte zip Datei hoch
    - Beginne Einträge für Einheiten/Methoden zu schreiben
    - Anschließend kannst du sie in der Listenansicht deiner Datenbank Verschieben.
+
+## Import von Datenbankeinträgen
+   - Im Ordner db_entries liegt eine zip Datei, diese enthält nicht nur die reinen Mehtoden, sondern auch Anhänge.
+   - Nachdem die Datenbankstruktur nach obiger Anleitung imporitert ist können Einträge importiert werden
+   - Das Format ist bei Einträgen ohne Anhänge csv und mit Anhängen eine zip Datei
+   - Nachdem Hochladen der Zip Datei sind die Methoden als Einträge auch direkt in der DB sichtbar.
 
 ## 🎯 Zentralen Funktionen
 
