@@ -1,0 +1,193 @@
+<!-- SINGLE TEMPLATE: IG Metall Methodenkarte – Edit + Delete + Print + Auto-Hide (Feldstand 2025-10) -->
+
+<div class="ig-wrap">
+
+  <!-- Toolbar: erscheint nur, wenn ##edit##/##delete## vom System geliefert werden -->
+  <div class="ig-toolbar no-print">
+    <span id="ig-edit-slot">##edit##</span>
+    <span id="ig-delete-slot">##delete##</span>
+  </div>
+
+  <article class="ig-card">
+
+    <header>
+      <h1 class="ig-title">[[Titel]]</h1>
+
+      <!-- Seminarphase (Mehrfachauswahl möglich) -->
+      <p class="ig-sub" data-hide-if-empty>
+        <span class="js-value"><strong>[[Seminarphase]]</strong></span>
+      </p>
+
+      <!-- Meta-Chips -->
+      <div class="ig-meta">
+        <span class="ig-chip js-chip">📚 <strong>Phase:</strong> <span class="js-value">[[Seminarphase]]</span></span>
+        <span class="ig-chip js-chip">⏱️ <strong>Zeit:</strong> <span class="js-value">[[Zeitbedarf]]</span></span>
+        <span class="ig-chip js-chip">👥 <strong>Größe:</strong> <span class="js-value">[[Gruppengröße]]</span></span>
+        <span class="ig-chip js-chip">🧠 <strong>Komplexität:</strong> <span class="js-value">[[Komplexitätsgrad]]</span></span>
+        <span class="ig-chip js-chip">🧰 <strong>Vorbereitung:</strong> <span class="js-value">[[Vorbereitung nötig]]</span></span>
+        <span class="ig-chip js-chip">🤝 <strong>Sozialform:</strong> <span class="js-value">[[Sozialform]]</span></span>
+      </div>
+    </header>
+
+    <!-- Kognitive Dimension -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Kognitive Dimension</h3>
+      <div class="ig-body js-value">[[Kognitive Dimension]]</div>
+    </section>
+
+    <!-- Kurzbeschreibung (Pflicht) -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Kurzbeschreibung</h3>
+      <div class="ig-body js-value">[[Kurzbeschreibung]]</div>
+    </section>
+
+    <!-- Ablauf (Pflicht) -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Ablauf</h3>
+      <div class="ig-body js-value">[[Ablauf]]</div>
+    </section>
+
+    <!-- Lernziele -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Lernziele (Ich-kann …)</h3>
+      <div class="ig-body js-value">[[Lernziele (Ich-kann ...)]]</div>
+    </section>
+
+    <!-- Reflexion -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Reflexion</h3>
+      <div class="ig-body js-value">[[Debrief/Reflexionsfragen]]</div>
+    </section>
+
+    <!-- Risiken &amp; Tipps -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Risiken &amp; Tipps</h3>
+      <div class="ig-body js-value">[[Risiken/Tipps]]</div>
+    </section>
+
+    <!-- Rahmen &amp; Zugänglichkeit -->
+    <section class="ig-section" id="rahmen">
+      <h3>Rahmen &amp; Zugänglichkeit</h3>
+      <dl class="ig-kv">
+        <div class="kv-row" data-hide-if-empty><dt>Raumanforderungen</dt><dd class="js-value">[[Raumanforderungen]]</dd></div>
+
+      </dl>
+    </section>
+
+    <!-- Materialien -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Materialien</h3>
+      <div class="ig-body js-value">[[Materialien]]</div>
+    </section>
+
+    <!-- H5P (als Embed möglich) -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>H5P-Inhalt</h3>
+      <div class="ig-body js-value">[[H5P-Inhalt]]</div>
+    </section>
+
+    <!-- Material/Technik (Liste) -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Material/Technik</h3>
+      <div class="ig-body js-value">[[Material/Technik]]</div>
+    </section>
+
+    <!-- Kontakt -->
+    <footer class="ig-section" data-hide-if-empty>
+      <h3>Autor*in / Kontakt</h3>
+      <div class="ig-body js-value">[[Autor*in / Kontakt]]</div>
+    </footer>
+
+    <!-- Tags / Schlüsselworte -->
+    <section class="ig-section" data-hide-if-empty>
+      <h3>Tags / Schlüsselworte</h3>
+      <div class="ig-body js-value">[[Tags / Schlüsselworte]]</div>
+    </section>
+
+    <!-- zukünftige Felder -->
+    <section class="ig-section" data-hide-if-empty>
+      <div class="ig-body js-value">##otherfields##</div>
+    </section>
+
+  </article>
+</div>
+
+<script>
+(function(){
+  // Hilfen: "leer" erkennen, aber Embeds/Medien als Inhalt werten (wichtig für H5P)
+  function cleanedText(el){
+    return String(el.innerHTML||'')
+      .replace(/<!--[\s\S]*?-->/g,'')
+      .replace(/<style[\s\S]*?<\/style>/gi,'')
+      .replace(/<script[\s\S]*?<\/script>/gi,'')
+      .replace(/&nbsp;|\u00A0/gi,' ')
+      .replace(/<br\s*\/?>/gi,'')
+      .replace(/<[^>]+>/g,'')
+      .trim();
+  }
+  function hasMedia(el){
+    return !!el.querySelector('iframe,embed,object,video,audio,img');
+  }
+  function isBlank(el){
+    return !hasMedia(el) && cleanedText(el).length === 0;
+  }
+
+  // Meta-Chips: leere ausblenden, ggf. ganze Meta-Zeile verstecken
+  document.querySelectorAll('.ig-chip.js-chip').forEach(chip=>{
+    const v = chip.querySelector('.js-value');
+    if(!v || isBlank(v)) chip.style.display = 'none';
+  });
+  const meta = document.querySelector('.ig-meta');
+  if(meta && !meta.querySelector('.ig-chip.js-chip:not([style*="display: none"])')) meta.style.display = 'none';
+
+  // Abschnitte mit data-hide-if-empty ausblenden
+  document.querySelectorAll('[data-hide-if-empty]').forEach(el=>{
+    const v = el.querySelector('.js-value') || el;
+    if(isBlank(v)) el.style.display = 'none';
+  });
+
+  // "Rahmen & Zugänglichkeit" komplett verstecken, wenn alle Zeilen leer
+  const rahmen = document.getElementById('rahmen');
+  if(rahmen){
+    const rows = rahmen.querySelectorAll('.kv-row');
+    const visible = Array.from(rows).some(r => {
+      const val = r.querySelector('.js-value') || r;
+      return r.style.display !== 'none' && !isBlank(val);
+    });
+    if(!visible) rahmen.style.display = 'none';
+  }
+
+  // Bearbeiten-Link hübsch machen (nur wenn vorhanden)
+  const editSlot = document.getElementById('ig-edit-slot');
+  if(editSlot){
+    const a = editSlot.querySelector('a');
+    if(a){
+      editSlot.querySelectorAll('img').forEach(img => img.remove());
+      a.classList.add('ig-btn','ig-btn--primary');
+      a.textContent = '✏️ Bearbeiten';
+    }else{
+      editSlot.style.display = 'none';
+    }
+  }
+
+  // Löschen-Link in roten Button verwandeln + Bestätigung (nur wenn vorhanden)
+  const delSlot = document.getElementById('ig-delete-slot');
+  if(delSlot){
+    const a = delSlot.querySelector('a');
+    if(a){
+      delSlot.querySelectorAll('img').forEach(img => img.remove());
+      a.classList.add('ig-btn','ig-btn--danger');
+      a.setAttribute('role','button');
+      a.textContent = '🗑️ Löschen';
+
+      const titleText = (document.querySelector('.ig-title')?.textContent || 'diesen Eintrag').trim();
+      a.addEventListener('click', (e)=>{
+        const ok = confirm(`Eintrag „${titleText}“ wirklich löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden.`);
+        if(!ok){ e.preventDefault(); }
+      });
+    }else{
+      delSlot.style.display = 'none';
+    }
+  }
+})();
+</script>

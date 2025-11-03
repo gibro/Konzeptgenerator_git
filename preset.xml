@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+<preset>
+
+<description/>
+
+<settings>
+<intro/>
+<comments>0</comments>
+<requiredentries>0</requiredentries>
+<requiredentriestoview>0</requiredentriestoview>
+<maxentries>0</maxentries>
+<rssarticles>0</rssarticles>
+<approval>0</approval>
+<manageapproved>1</manageapproved>
+<defaultsortdir>0</defaultsortdir>
+<defaultsort>0</defaultsort>
+</settings>
+
+<field>
+<type>text</type>
+<name>Titel</name>
+<description>Benenne deine Methode</description>
+<required>1</required>
+</field>
+
+<field>
+<type>multimenu</type>
+<name>Seminarphase</name>
+<required>0</required>
+<param1>Warm-Up
+Einstieg
+Erwartungsabfrage
+Vorwissen aktivieren
+Wissen vermitteln
+Reflexion
+Transfer
+Evaluation/Feedback
+Abschluss</param1>
+</field>
+
+<field>
+<type>menu</type>
+<name>Zeitbedarf</name>
+<description>Bei einem ganzen Tag 180 Minuten nutzen</description>
+<required>0</required>
+<param1>5
+10
+20
+30
+45
+60
+90
+120
+150
+180
+mehr als 180 Minuten</param1>
+</field>
+
+<field>
+<type>menu</type>
+<name>Gruppengr&#xF6;&#xDF;e</name>
+<description>Anzahl an ben&#xF6;tigten TN f&#xFC;r diese Methode</description>
+<required>0</required>
+<param1>1
+2-3
+3&#x2013;5
+6&#x2013;12
+13&#x2013;24
+25+
+beliebig</param1>
+</field>
+
+<field>
+<type>textarea</type>
+<name>Kurzbeschreibung</name>
+<description>kurz und pr&#xE4;gnant, um zu entscheiden, ob die Methode in Frage kommt</description>
+<required>0</required>
+<param2>60</param2>
+<param3>15</param3>
+<param4>1</param4>
+<param5>0</param5>
+</field>
+
+<field>
+<type>text</type>
+<name>Autor*in / Kontakt</name>
+<description>F&#xFC;r R&#xFC;ckfragen</description>
+<required>0</required>
+</field>
+
+<field>
+<type>textarea</type>
+<name>Lernziele (Ich-kann ...)</name>
+<required>0</required>
+<param2>60</param2>
+<param3>15</param3>
+<param4>1</param4>
+<param5>0</param5>
+</field>
+
+<field>
+<type>menu</type>
+<name>Komplexit&#xE4;tsgrad</name>
+<required>0</required>
+<param1>ehr niedrig
+niedrig
+mittel
+hoch</param1>
+</field>
+
+<field>
+<type>menu</type>
+<name>Vorbereitung n&#xF6;tig</name>
+<required>0</required>
+<param1>keine
+&lt;10 Min
+10&#x2013;30 Min
+&gt;30 Min</param1>
+</field>
+
+<field>
+<type>multimenu</type>
+<name>Raumanforderungen</name>
+<required>0</required>
+<param1>Plenum
+Stuhlkreis
+Stehtische
+viel Freifl&#xE4;che
+Gruppentische
+Gruppenr&#xE4;ume
+akustisch ruhig</param1>
+</field>
+
+<field>
+<type>multimenu</type>
+<name>Sozialform</name>
+<required>0</required>
+<param1>Vortrag
+Diskussion
+Einzelarbeit
+Partnerarbeit
+Kleingruppen
+Galeriegang
+Fishbowl</param1>
+</field>
+
+<field>
+<type>textarea</type>
+<name>Risiken/Tipps</name>
+<description>Fallstricke, Moderationshinweise, Varianten, Barrierefreiheit</description>
+<required>0</required>
+<param2>60</param2>
+<param3>15</param3>
+<param4>1</param4>
+<param5>0</param5>
+</field>
+
+<field>
+<type>textarea</type>
+<name>Debrief/Reflexionsfragen</name>
+<description>3-5 Fragen</description>
+<required>0</required>
+<param2>60</param2>
+<param3>15</param3>
+<param4>1</param4>
+<param5>0</param5>
+</field>
+
+<field>
+<type>file</type>
+<name>Materialien</name>
+<description>PDF-Handout, Folie, Karten (Wenn du mehrere Dateien hast, verpacke sie in einer zip Datei)</description>
+<required>0</required>
+<param3>0</param3>
+</field>
+
+<field>
+<type>textarea</type>
+<name>H5P-Inhalt</name>
+<description>Wenn du einen h5p Inhalt als Material hinzuf&#xFC;gen willst, nutze das h5p Icon im Texteditor</description>
+<required>0</required>
+<param2>60</param2>
+<param3>15</param3>
+<param4>1</param4>
+<param5>0</param5>
+</field>
+
+<field>
+<type>textarea</type>
+<name>Material/Technik</name>
+<description>Gebe hier als Liste die ben&#xF6;tigten Materialien an</description>
+<required>0</required>
+<param2>60</param2>
+<param3>15</param3>
+<param4>1</param4>
+<param5>0</param5>
+</field>
+
+<field>
+<type>textarea</type>
+<name>Ablauf</name>
+<description>Beschreibe die einzelnen Phasen der Methode</description>
+<required>0</required>
+<param2>60</param2>
+<param3>15</param3>
+<param4>1</param4>
+<param5>0</param5>
+</field>
+
+<field>
+<type>text</type>
+<name>Tags / Schl&#xFC;sselworte</name>
+<description>Seminark&#xFC;rzel, z.B. BR1, A1 etc.</description>
+<required>0</required>
+</field>
+
+<field>
+<type>multimenu</type>
+<name>Kognitive Dimension</name>
+<description>(Bloomsche Taxonomie)</description>
+<required>0</required>
+<param1>Erinnern: Wissen wiedergeben oder abrufen (z.B. benennen, definieren)
+Verstehen: Informationen interpretieren oder erkl&#xE4;ren (z.B. zusammenfassen, vergleichen)
+Anwenden: Wissen in neuen Situationen umsetzen (z.B. ausf&#xFC;hren, verallgemeinern)
+Analysieren: Informationen in ihre Bestandteile zerlegen (z.B. unterscheiden, klassifizieren)
+Bewerten: Urteile f&#xE4;llen und Kriterien anwenden (z.B. &#xFC;berpr&#xFC;fen, kritisch bewerten)
+Erschaffen: Neues Wissen oder neue Produkte entwickeln (z.B. planen, erzeugen, bauen)</param1>
+</field>
+
+</preset>

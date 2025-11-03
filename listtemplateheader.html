@@ -1,0 +1,237 @@
+<!-- Seminarplaner (Drag & Drop) -->
+<div class="sp-wrapper">
+  <header class="sp-header">
+    <h1 class="sp-header__title" id="sp-print-title">Seminarplaner (Drag & Drop)</h1>
+  </header>
+
+  <!-- Meta-Bar (Eingaben nur in dieser Liste & im Druck sichtbar) -->
+  <div class="sp-meta-grid" id="sp-meta-grid">
+    <div class="sp-meta-field">
+      <label for="sp-meta-title" class="sp-meta-label">Seminartitel</label>
+      <input id="sp-meta-title" class="sp-input" type="text" placeholder="Seminartitel">
+    </div>
+    <div class="sp-meta-field">
+      <label for="sp-meta-date" class="sp-meta-label">Datum</label>
+      <input id="sp-meta-date" class="sp-input" type="text" placeholder="Datum (z. B. 09.10.2025)">
+    </div>
+    <div class="sp-meta-field">
+      <label for="sp-meta-number" class="sp-meta-label">Seminarnummer</label>
+      <input id="sp-meta-number" class="sp-input" type="text" placeholder="Seminarnummer">
+    </div>
+    <div class="sp-meta-field">
+      <label for="sp-meta-contact" class="sp-meta-label">Kontakt</label>
+      <input id="sp-meta-contact" class="sp-input" type="text" placeholder="Kontakt (z. B. Name, E-Mail)">
+    </div>
+  </div>
+
+  <!-- Print-Header (wird aus obigen Eingaben befüllt) -->
+  <div class="sp-print-header" aria-hidden="true">
+    <div class="sp-ph"><span class="lbl">Seminartitel</span><span id="sp-ph-title" class="val">—</span></div>
+    <div class="sp-ph"><span class="lbl">Datum</span><span id="sp-ph-date" class="val">—</span></div>
+    <div class="sp-ph"><span class="lbl">Seminarnummer</span><span id="sp-ph-number" class="val">—</span></div>
+    <div class="sp-ph"><span class="lbl">Kontakt</span><span id="sp-ph-contact" class="val">—</span></div>
+  </div>
+
+  <div class="sp-tools">
+    <button class="sp-btn sp-btn--icon" id="sp-config" type="button" title="Grid konfigurieren">
+      <span aria-hidden="true">⚙️</span>
+      <span>Grid</span>
+    </button>
+    <button class="sp-btn sp-btn--icon" id="sp-addbreak" type="button" title="Pause hinzufügen">
+      <span aria-hidden="true">⏸️</span>
+      <span>Pause</span>
+    </button>
+    <label class="sp-btn sp-btn--icon" title="Plan aus JSON importieren">
+      <span aria-hidden="true">📥</span>
+      <span>Import</span>
+      <input id="sp-import" type="file" accept="application/json" style="display:none" />
+    </label>
+    <button class="sp-btn sp-btn--icon" id="sp-export" type="button" title="Plan als JSON exportieren">
+      <span aria-hidden="true">💾</span>
+      <span>Export</span>
+    </button>
+    <button class="sp-btn sp-btn--icon" id="sp-clear" type="button" title="Gesamten Plan löschen">
+      <span aria-hidden="true">🗑️</span>
+      <span>Löschen</span>
+    </button>
+    <div class="sp-zoom-controls" role="group" aria-label="Zoomsteuerung">
+      <button class="sp-zoom-btn" id="sp-zoom-out" type="button" title="Ansicht verkleinern">🔍−</button>
+      <span class="sp-zoom-indicator" id="sp-zoom-indicator">5 Min</span>
+      <button class="sp-zoom-btn" id="sp-zoom-in" type="button" title="Ansicht vergrößern">🔍+</button>
+    </div>
+  </div>
+
+  <div class="sp-layout">
+  <!-- Grid Configuration Modal -->
+  <div class="sp-modal" id="sp-config-modal">
+    <div class="sp-modal__backdrop" data-modal-close="config"></div>
+    <div class="sp-modal__dialog sp-modal__dialog--large" role="dialog" aria-modal="true" aria-labelledby="sp-config-modal-title">
+      <header class="sp-modal__header">
+        <h2 id="sp-config-modal-title">Grid konfigurieren</h2>
+        <button type="button" class="sp-modal__close" data-modal-close="config" aria-label="Modal schließen">✕</button>
+      </header>
+      <form class="sp-modal__body" id="sp-config-form">
+        <!-- Preset Selection -->
+        <div class="sp-modal__section">
+          <label class="sp-modal__field">
+            <span class="sp-modal__label">Vorlage wählen</span>
+            <select name="preset" id="sp-config-preset">
+              <option value="custom">Individuelle Konfiguration</option>
+              <option value="standard-week">Standard-Woche (Mo-Fr, 8:30-17:30)</option>
+              <option value="weekend-seminar">Wochenendseminar (Fr-So, 8:30-17:30)</option>
+              <option value="half-week-mo-mi">Halbe Woche (Mo-Mi, 8:30-17:30)</option>
+              <option value="half-week-mi-fr">Halbe Woche (Mi-Fr, 8:30-17:30)</option>
+              <option value="compact-day">Kompakttag (8:30-17:30)</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Days Selection -->
+        <div class="sp-modal__section">
+          <span class="sp-modal__label">Wochentage auswählen</span>
+          <div class="sp-days-grid">
+            <label class="sp-day-checkbox">
+              <input type="checkbox" name="days" value="Montag" id="sp-day-mo">
+              <span>Montag</span>
+            </label>
+            <label class="sp-day-checkbox">
+              <input type="checkbox" name="days" value="Dienstag" id="sp-day-di">
+              <span>Dienstag</span>
+            </label>
+            <label class="sp-day-checkbox">
+              <input type="checkbox" name="days" value="Mittwoch" id="sp-day-mi">
+              <span>Mittwoch</span>
+            </label>
+            <label class="sp-day-checkbox">
+              <input type="checkbox" name="days" value="Donnerstag" id="sp-day-do">
+              <span>Donnerstag</span>
+            </label>
+            <label class="sp-day-checkbox">
+              <input type="checkbox" name="days" value="Freitag" id="sp-day-fr">
+              <span>Freitag</span>
+            </label>
+            <label class="sp-day-checkbox">
+              <input type="checkbox" name="days" value="Samstag" id="sp-day-sa">
+              <span>Samstag</span>
+            </label>
+            <label class="sp-day-checkbox">
+              <input type="checkbox" name="days" value="Sonntag" id="sp-day-so">
+              <span>Sonntag</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Time Range -->
+        <div class="sp-modal__section">
+          <span class="sp-modal__label">Zeitbereich (für längsten Tag)</span>
+          <div class="sp-time-range">
+            <label class="sp-modal__field">
+              <span class="sp-modal__label">Startzeit</span>
+              <input type="time" name="timeStart" id="sp-config-time-start" value="08:30">
+            </label>
+            <label class="sp-modal__field">
+              <span class="sp-modal__label">Endzeit</span>
+              <input type="time" name="timeEnd" id="sp-config-time-end" value="17:30">
+            </label>
+          </div>
+          <div class="sp-time-range-note">
+            <p style="margin: 8px 0 0; font-size: 0.85rem; color: #64748b; font-style: italic;">
+              Das Grid wird automatisch die Zeit des längsten Tages übernehmen. Kürzere Tage werden entsprechend angepasst.
+            </p>
+          </div>
+        </div>
+
+        <!-- Grid Granularity -->
+        <div class="sp-modal__section">
+          <span class="sp-modal__label">Zeit-Granularität</span>
+          <div class="sp-granularity-options">
+            <label class="sp-granularity-option">
+              <input type="radio" name="granularity" value="5" id="sp-gran-5">
+              <span>5 Minuten</span>
+            </label>
+            <label class="sp-granularity-option">
+              <input type="radio" name="granularity" value="10" id="sp-gran-10">
+              <span>10 Minuten</span>
+            </label>
+            <label class="sp-granularity-option">
+              <input type="radio" name="granularity" value="15" id="sp-gran-15" checked>
+              <span>15 Minuten</span>
+            </label>
+            <label class="sp-granularity-option">
+              <input type="radio" name="granularity" value="30" id="sp-gran-30">
+              <span>30 Minuten</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Breaks -->
+        <div class="sp-modal__section">
+          <div class="sp-breaks-header">
+            <span class="sp-modal__label">Pausenzeiten</span>
+            <button type="button" class="sp-btn sp-btn--small" id="sp-add-break">+ Pause hinzufügen</button>
+          </div>
+          <div class="sp-breaks-list" id="sp-breaks-list">
+            <!-- Dynamisch generiert -->
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="sp-modal__section">
+          <span class="sp-modal__label">Vorschau</span>
+          <div class="sp-preview-container">
+            <div class="sp-preview-grid" id="sp-preview-grid">
+              <!-- Dynamisch generiert -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Columns -->
+        <div class="sp-modal__section">
+          <span class="sp-modal__label">Tabellenspalten</span>
+          <p style="margin: 0 0 12px; font-size: 0.9rem; color: #64748b;">Wählen Sie die Spalten aus, die in der Tabelle unter dem Grid angezeigt werden sollen.</p>
+          <div class="sp-table-columns-grid">
+            <label class="sp-table-column-checkbox">
+              <input type="checkbox" name="tableColumns" value="uhrzeit" id="sp-table-col-uhrzeit" checked disabled>
+              <span>Uhrzeit <em style="color: #9ca3af; font-size: 0.85rem;">(immer enthalten)</em></span>
+            </label>
+            <label class="sp-table-column-checkbox">
+              <input type="checkbox" name="tableColumns" value="title" id="sp-table-col-title">
+              <span>Titel der Methode</span>
+            </label>
+            <label class="sp-table-column-checkbox">
+              <input type="checkbox" name="tableColumns" value="description" id="sp-table-col-description">
+              <span>Kurzbeschreibung</span>
+            </label>
+            <label class="sp-table-column-checkbox">
+              <input type="checkbox" name="tableColumns" value="flow" id="sp-table-col-flow">
+              <span>Ablauf</span>
+            </label>
+            <label class="sp-table-column-checkbox">
+              <input type="checkbox" name="tableColumns" value="objectives" id="sp-table-col-objectives">
+              <span>Lernziele</span>
+            </label>
+            <label class="sp-table-column-checkbox">
+              <input type="checkbox" name="tableColumns" value="risks" id="sp-table-col-risks">
+              <span>Risiken/Tipps</span>
+            </label>
+            <label class="sp-table-column-checkbox">
+              <input type="checkbox" name="tableColumns" value="materials" id="sp-table-col-materials">
+              <span>Material/Technik</span>
+            </label>
+            <label class="sp-table-column-checkbox">
+              <input type="checkbox" name="tableColumns" value="sonstiges" id="sp-table-col-sonstiges">
+              <span>Sonstiges <em style="color: #9ca3af; font-size: 0.85rem;">(leer für handschriftliche Ergänzungen)</em></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="sp-modal__actions">
+          <button type="button" class="sp-btn sp-btn--ghost" data-modal-close="config">Abbrechen</button>
+          <button type="submit" class="sp-btn sp-btn--primary">Übernehmen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sidebar: Methoden (hier fügt Moodle pro Datensatz die Karte ein) -->
+  <aside class="sp-sidebar" id="sp-methods">
