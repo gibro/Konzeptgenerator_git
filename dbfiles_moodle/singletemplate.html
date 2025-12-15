@@ -128,8 +128,17 @@
   function hasMedia(el){
     return !!el.querySelector('iframe,embed,object,video,audio,img');
   }
+  function hasFileLink(el){
+    // Prüfe auf Links mit href (Dateifelder werden als Links gerendert)
+    const links = el.querySelectorAll('a[href]');
+    return Array.from(links).some(link => {
+      const href = (link.getAttribute('href') || '').trim();
+      const text = (link.textContent || '').trim();
+      return href.length > 0 && text.length > 0;
+    });
+  }
   function isBlank(el){
-    return !hasMedia(el) && cleanedText(el).length === 0;
+    return !hasMedia(el) && !hasFileLink(el) && cleanedText(el).length === 0;
   }
 
   // Meta-Chips: leere ausblenden, ggf. ganze Meta-Zeile verstecken

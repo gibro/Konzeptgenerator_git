@@ -176,17 +176,6 @@ Fishbowl</param1>
 
 <field>
 <type>textarea</type>
-<name>H5P-Inhalt</name>
-<description>Wenn du einen h5p Inhalt als Material hinzuf&#xFC;gen willst, nutze das h5p Icon im Texteditor</description>
-<required>0</required>
-<param2>60</param2>
-<param3>15</param3>
-<param4>1</param4>
-<param5>0</param5>
-</field>
-
-<field>
-<type>textarea</type>
 <name>Material/Technik</name>
 <description>Gebe hier als Liste die ben&#xF6;tigten Materialien an</description>
 <required>0</required>
@@ -225,6 +214,13 @@ Anwenden: Wissen in neuen Situationen umsetzen (z.B. ausf&#xFC;hren, verallgemei
 Analysieren: Informationen in ihre Bestandteile zerlegen (z.B. unterscheiden, klassifizieren)
 Bewerten: Urteile f&#xE4;llen und Kriterien anwenden (z.B. &#xFC;berpr&#xFC;fen, kritisch bewerten)
 Erschaffen: Neues Wissen oder neue Produkte entwickeln (z.B. planen, erzeugen, bauen)</param1>
+</field>
+
+<field>
+<type>file</type>
+<name>H5P-Inhalt</name>
+<required>0</required>
+<param3>0</param3>
 </field>
 
 </preset>
