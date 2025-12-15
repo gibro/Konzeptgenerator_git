@@ -61,6 +61,81 @@
     </div>
   </div>
 
+  <!-- Filter-Toolbar -->
+  <div class="sp-filterbar" id="sp-filterbar" role="search">
+    <label class="sp-filter">
+      <span class="sp-filter__label">Suche</span>
+      <input id="sp-filter-search" class="sp-input" type="search" placeholder="Titel, Beschreibung, Tags …">
+    </label>
+    <label class="sp-filter">
+      <span class="sp-filter__label">Tags</span>
+      <select id="sp-filter-tags" class="sp-input" multiple size="3" aria-label="Tags auswählen">
+        <option value="">Alle</option>
+      </select>
+    </label>
+    <label class="sp-filter">
+      <span class="sp-filter__label">Seminarphase</span>
+      <select id="sp-filter-phase" class="sp-input">
+        <option value="">Alle</option>
+        <option value="Warm-Up">Warm-Up</option>
+        <option value="Einstieg">Einstieg</option>
+        <option value="Erwartungsabfrage">Erwartungsabfrage</option>
+        <option value="Vorwissen aktivieren">Vorwissen aktivieren</option>
+        <option value="Wissen vermitteln">Wissen vermitteln</option>
+        <option value="Reflexion">Reflexion</option>
+        <option value="Transfer">Transfer</option>
+        <option value="Evaluation/Feedback">Evaluation/Feedback</option>
+        <option value="Abschluss">Abschluss</option>
+      </select>
+    </label>
+    <label class="sp-filter">
+      <span class="sp-filter__label">Gruppengröße</span>
+      <select id="sp-filter-group" class="sp-input">
+        <option value="">Alle</option>
+        <option value="1">1</option>
+        <option value="2-3">2-3</option>
+        <option value="3–5">3–5</option>
+        <option value="6–12">6–12</option>
+        <option value="13–24">13–24</option>
+        <option value="25+">25+</option>
+        <option value="beliebig">beliebig</option>
+      </select>
+    </label>
+    <label class="sp-filter">
+      <span class="sp-filter__label">Zeitbedarf</span>
+      <select id="sp-filter-duration" class="sp-input">
+        <option value="">Alle</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="45">45</option>
+        <option value="60">60</option>
+        <option value="90">90</option>
+        <option value="120">120</option>
+        <option value="150">150</option>
+        <option value="180">180</option>
+        <option value="mehr als 180 Minuten">mehr als 180 Minuten</option>
+      </select>
+    </label>
+    <label class="sp-filter">
+      <span class="sp-filter__label">Kognitive Dimension</span>
+      <select id="sp-filter-cognitive" class="sp-input">
+        <option value="">Alle</option>
+        <option value="Erinnern">Erinnern: Wissen wiedergeben oder abrufen</option>
+        <option value="Verstehen">Verstehen: Informationen interpretieren oder erklären</option>
+        <option value="Anwenden">Anwenden: Wissen in neuen Situationen umsetzen</option>
+        <option value="Analysieren">Analysieren: Informationen zerlegen und einordnen</option>
+        <option value="Bewerten">Bewerten: Urteile fällen und Kriterien anwenden</option>
+        <option value="Erschaffen">Erschaffen: Neues Wissen oder Produkte entwickeln</option>
+      </select>
+    </label>
+    <div class="sp-filter sp-filter__actions">
+      <button class="sp-btn sp-btn--ghost" id="sp-filter-reset" type="button">Filter zurücksetzen</button>
+    </div>
+  </div>
+  <div class="sp-filter-status" id="sp-filter-status" aria-live="polite"></div>
+
   <div class="sp-layout">
   <!-- Grid Configuration Modal -->
   <div class="sp-modal" id="sp-config-modal">

@@ -2,19 +2,13 @@
 
 Eine webbasierte Datenbank zur Verwaltung und Planung von Seminarmethoden für die IG Metall. Das System ermöglicht es, Methodenkarten zu erstellen, zu verwalten und in einem interaktiven Seminarplaner zu organisieren.
 
-## Installation DB
+## Installation
    - erzeuge ein zip aus den vorliegenden Dateien, ohne README und AGENTS und LICENSE
    - Erstelle eine Datenbank-Aktivität in deinem Moodle und klicke auf speichern und anzeigen in der Aktivitätserstellung
    - Klicke auf Vorlagensatz importieren
    - Lade die erzeugte zip Datei hoch
    - Beginne Einträge für Einheiten/Methoden zu schreiben
    - Anschließend kannst du sie in der Listenansicht deiner Datenbank Verschieben.
-
-## Import von Datenbankeinträgen
-   - Im Ordner db_entries liegt eine zip Datei, diese enthält nicht nur die reinen Mehtoden, sondern auch Anhänge.
-   - Nachdem die Datenbankstruktur nach obiger Anleitung imporitert ist können Einträge importiert werden
-   - Das Format ist bei Einträgen ohne Anhänge csv und mit Anhängen eine zip Datei
-   - Nachdem Hochladen der Zip Datei sind die Methoden als Einträge auch direkt in der DB sichtbar.
 
 ## 🎯 Zentralen Funktionen
 
@@ -68,7 +62,7 @@ Die Datenbank verwendet ein flexibles XML-basiertes Feldkonzept. Jedes Feld kann
 
 **Materialien:**
 - **Materialien** (File): PDF-Handouts, Folien, Karten (auch ZIP möglich)
-- **H5P-Inhalt** (Textarea): Embed-Code für H5P-Inhalte
+- **H5P-Inhalt** (File): H5P-Inhalt als Datei-Upload (wird in der Einzelansicht nur angezeigt, wenn eine Datei vorhanden ist)
 - **Material/Technik** (Textarea): Liste der benötigten Materialien
 
 **Metadata:**
@@ -84,7 +78,7 @@ Die Datenbank verwendet ein flexibles XML-basiertes Feldkonzept. Jedes Feld kann
 3. Nutzen Sie die drei Hauptabschnitte:
    - **Schnellfassung**: Titel, Phase, Tags, Zeitbedarf, Gruppengröße, Kognitive Dimension, Kurzbeschreibung, Ablauf
    - **Qualität & Rahmen**: Lernziele, Komplexitätsgrad, Vorbereitung, Raumanforderungen, Sozialform, Risiken/Tipps, Reflexionsfragen
-   - **Materialien & Technik**: Materialien, H5P-Inhalt, Material/Technik
+   - **Materialien & Technik**: Materialien, H5P-Inhalt (Datei), Material/Technik
 4. Speichern Sie den Eintrag
 
 #### 2. Methodenkarte anzeigen
@@ -151,6 +145,8 @@ Die Platzhalter müssen exakt mit den Feldnamen in `preset.xml` übereinstimmen.
 - ✅ **Import/Export**: JSON-basierter Datenaustausch
 - ✅ **Tabellenansicht**: ZIM-Papier mit konfigurierbaren Spalten
 - ✅ **Meta-Informationen**: Seminardetails im Header
+ - ✅ **Filter & Suche**: Freitextsuche plus Filter für Tags, Seminarphase, Gruppengröße, Zeitbedarf und kognitive Dimension
+ - ✅ **Kognitive Farbcodierung**: Methoden werden je nach kognitiver Dimension (Erinnern → Erschaffen) in einer Blau‑bis‑Rot-Skala eingefärbt – sowohl in der Sidebar als auch im Grid
 
 ### Methodenkarten Features
 

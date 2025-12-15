@@ -74,6 +74,16 @@
     { id: 'coarse', label: '30 Min', slotMinutes: 30, slotPx: 30, labelEverySlots: 2, showMinor: false }
   ];
 
+  // Mapping kognitive Dimensionen zu Level (1-6)
+  const COGNITIVE_LEVELS = {
+    'erinnern': 1,
+    'verstehen': 2,
+    'anwenden': 3,
+    'analysieren': 4,
+    'bewerten': 5,
+    'erschaffen': 6
+  };
+
   // =========================================
   // UTILITY FUNCTIONS
   // =========================================
@@ -140,6 +150,14 @@
     });
   }
 
+  function debounce(fn, wait = 180) {
+    let t = null;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), wait);
+    };
+  }
+
   // =========================================
   // SEMINARPLANNER CLASS
   // =========================================
@@ -152,6 +170,12 @@
       this.modalKeydownHandler = null;
       this.configModalKeydownHandler = null;
       this.gridConfig = this.loadGridConfig();
+      this.filterIndex = [];
+      this.filtersInitialized = false;
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a1de993a-8495-4f66-85aa-2afc1448bb49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H1',location:'jstemplate.js:constructor',message:'Wrapper check',data:{hasWrapper:!!this.wrapper,alreadyInit:this.wrapper?.dataset?.spInitialized},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       
       if (!this.wrapper || this.wrapper.dataset.spInitialized === '1') {
         return;
@@ -168,6 +192,7 @@
       this.loadZoomPreference();
       this.applyGridConfig();
       this.setupConstants();
+      this.setupFilters();
       this.refreshLayout();
       this.bindMetaInputs();
       localStorage.setItem(CONFIG.storageKey, JSON.stringify(this.plan));
@@ -284,6 +309,10 @@
       
       this.configModal.setAttribute('aria-hidden', 'true');
       this.initializeConfigModal();
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a1de993a-8495-4f66-85aa-2afc1448bb49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H2',location:'jstemplate.js:createConfigModal',message:'Config modal elements',data:{hasModal:!!this.configModal,hasForm:!!this.configForm,daysCount:this.daysCheckboxes?.length || 0,hasTimeStart:!!this.timeStartInput,hasTimeEnd:!!this.timeEndInput,granularityCount:this.granularityRadios?.length || 0,hasBreaksList:!!this.breaksList,hasTableColumns:(this.configModal?.querySelectorAll('input[name=\"tableColumns\"]').length||0)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
     }
 
     bindEvents() {
@@ -988,6 +1017,10 @@
       this.closeConfigModal();
       this.clearWarn();
       console.log('Config applied successfully');
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a1de993a-8495-4f66-85aa-2afc1448bb49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H3',location:'jstemplate.js:handleConfigFormSubmit',message:'Applied config',data:{days:config?.days||[],timeRange:config?.timeRange,granularity:config?.granularity,tableColumns:Object.keys(config?.tableColumns||{}).filter(k=>config?.tableColumns?.[k])},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
     }
 
     getConfigFromModal() {
@@ -1258,6 +1291,10 @@
       
       next.endMin = ensuredEnd;
       next.details = this.cloneDetails(next.details);
+      // Erhalte cognitiveLevel, falls vorhanden
+      if (next.cognitiveLevel !== undefined) {
+        next.cognitiveLevel = next.cognitiveLevel;
+      }
       return next;
     }
 
@@ -1580,6 +1617,10 @@
             } catch (err) {
               payloadDetails = this.cloneDetails(details);
             }
+
+            const cognitiveLevel = card.dataset.cognitiveLevel
+              ? Number.parseInt(card.dataset.cognitiveLevel, 10)
+              : null;
             
             const payload = {
               type: 'method',
@@ -1587,13 +1628,291 @@
               duration: snapDuration(Number.parseInt(card.dataset.dragDuration || String(CONFIG.baseSlotMinutes), 10)),
               cardHtml: card.dataset.printHtml || '',
               entryId: card.dataset.entryId || null,
-              details: payloadDetails
+              details: payloadDetails,
+              cognitiveLevel
             };
             
             e.dataTransfer.setData('text/plain', JSON.stringify(payload));
           });
         }
       });
+
+      this.buildFilterIndex(cards);
+      
+      // Wende kognitive Level-Klassen auf Sidebar-Karten an
+      this.filterIndex.forEach(item => {
+        if (item.cognitiveLevel !== null && item.cognitiveLevel !== undefined) {
+          // Entferne alte Level-Klassen
+          item.el.classList.remove('sp-level-1', 'sp-level-2', 'sp-level-3', 'sp-level-4', 'sp-level-5', 'sp-level-6');
+          // Füge neue Level-Klasse hinzu
+          item.el.classList.add(`sp-level-${item.cognitiveLevel}`);
+        } else {
+          // Entferne alle Level-Klassen, falls keine kognitive Dimension vorhanden
+          item.el.classList.remove('sp-level-1', 'sp-level-2', 'sp-level-3', 'sp-level-4', 'sp-level-5', 'sp-level-6');
+        }
+      });
+    }
+
+    // =========================================
+    // FILTERING (SIDEBAR)
+    // =========================================
+    setupFilters() {
+      this.filterControls = {
+        search: document.getElementById('sp-filter-search'),
+        tags: document.getElementById('sp-filter-tags'),
+        phase: document.getElementById('sp-filter-phase'),
+        group: document.getElementById('sp-filter-group'),
+        duration: document.getElementById('sp-filter-duration'),
+        cognitive: document.getElementById('sp-filter-cognitive'),
+        reset: document.getElementById('sp-filter-reset'),
+        status: document.getElementById('sp-filter-status')
+      };
+
+      const hasElements = Object.values(this.filterControls).some(Boolean);
+      if (!hasElements) {
+        return;
+      }
+
+      this.filtersInitialized = true;
+      this.applyFiltersDebounced = debounce(() => this.applyFilters(), 120);
+
+      if (this.filterControls.search) {
+        this.filterControls.search.addEventListener('input', () => this.applyFiltersDebounced());
+      }
+
+      ['tags', 'phase', 'group', 'duration', 'cognitive'].forEach(key => {
+        const el = this.filterControls[key];
+        if (el) {
+          el.addEventListener('change', () => this.applyFilters());
+        }
+      });
+
+      if (this.filterControls.reset) {
+        this.filterControls.reset.addEventListener('click', () => this.resetFilters());
+      }
+    }
+
+    buildFilterIndex(cards = []) {
+      if (!this.filtersInitialized) return;
+
+      const index = cards.map(card => {
+        const titleText = (card.querySelector('.sp-titletext')?.textContent || '').trim();
+        return this.mapCardForFilter(card, titleText);
+      });
+
+      this.filterIndex = index;
+
+      // cognitiveLevel auch am DOM-Element hinterlegen, damit Drag-&-Drop es mitgeben kann
+      this.filterIndex.forEach(item => {
+        if (item.cognitiveLevel !== null && item.cognitiveLevel !== undefined) {
+          item.el.dataset.cognitiveLevel = String(item.cognitiveLevel);
+        } else {
+          delete item.el.dataset.cognitiveLevel;
+        }
+      });
+
+      this.populateFilterOptions(index);
+      this.applyFilters();
+    }
+
+    mapCardForFilter(card, title) {
+      const readField = key => (card.querySelector(`[data-field="${key}"]`)?.textContent || '').trim();
+      const desc = (card.querySelector('.sp-card-description')?.textContent || '').trim();
+      const tagsRaw = readField('tags');
+      const tagList = tagsRaw
+        .split(/[,;]+/)
+        .map(t => t.trim())
+        .filter(Boolean);
+      const groupSize = readField('gruppengroesse');
+      const phaseRaw = readField('seminarphase');
+      const duration = readField('zeitbedarf');
+      const cognitiveRaw = readField('kognitive');
+      const cognitiveList = cognitiveRaw
+        .split(/[,;]+/)
+        .map(t => t.trim())
+        .filter(Boolean);
+
+      // Berechne höchste kognitive Stufe für Farbcodierung
+      const cognitiveLevels = cognitiveList
+        .map(c => {
+          const normalized = this.normalizeCognitiveLabel(c);
+          return COGNITIVE_LEVELS[normalized] || null;
+        })
+        .filter(level => level !== null);
+      const maxCognitiveLevel = cognitiveLevels.length > 0 ? Math.max(...cognitiveLevels) : null;
+
+      const haystack = [
+        title,
+        desc,
+        tagsRaw,
+        groupSize,
+        phaseRaw,
+        duration,
+        cognitiveRaw,
+        readField('description')
+      ]
+        .join(' ')
+        .toLowerCase();
+
+      return {
+        el: card,
+        title,
+        text: haystack,
+        tags: tagList.map(t => ({ raw: t, norm: t.toLowerCase() })),
+        group: groupSize,
+        groupNorm: groupSize.toLowerCase(),
+        phase: phaseRaw,
+        phaseNorm: phaseRaw
+          .split(/[,;]+/)
+          .map(p => p.trim().toLowerCase()),
+        duration,
+        durationNorm: duration.toLowerCase(),
+        cognitive: cognitiveList,
+        cognitiveNorm: cognitiveList.map(c => this.normalizeCognitiveLabel(c)),
+        cognitiveLevel: maxCognitiveLevel
+      };
+    }
+
+    populateFilterOptions(index = []) {
+      if (!this.filtersInitialized) return;
+
+      const sets = {
+        tags: new Set()
+      };
+
+      index.forEach(item => {
+        item.tags.forEach(t => sets.tags.add(t.raw));
+      });
+
+      this.applyOptions(this.filterControls.tags, sets.tags, true);
+      // Seminarphase, Gruppengröße, Zeitbedarf & kognitive Dimension: feste Optionen aus dem Markup, keine dynamische Befüllung
+    }
+
+    applyOptions(select, values, keepMulti = false) {
+      if (!select) return;
+
+      const currentValue = keepMulti ? this.getSelectedValues(select) : [select.value];
+      const firstOption = select.querySelector('option[value=""]');
+      select.innerHTML = '';
+      if (firstOption) {
+        select.appendChild(firstOption);
+      } else {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Alle';
+        select.appendChild(opt);
+      }
+
+      [...values]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'de', { sensitivity: 'base' }))
+        .forEach(val => {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = val;
+          select.appendChild(opt);
+        });
+
+      if (keepMulti) {
+        select.querySelectorAll('option').forEach(opt => {
+          if (currentValue.includes(opt.value)) {
+            opt.selected = true;
+          }
+        });
+      } else if (currentValue[0]) {
+        select.value = currentValue[0];
+      } else {
+        select.value = '';
+      }
+    }
+
+    getSelectedValues(select) {
+      if (!select) return [];
+      return Array.from(select.selectedOptions || [])
+        .map(opt => opt.value)
+        .filter(Boolean);
+    }
+
+    normalizeCognitiveLabel(value) {
+      if (!value) return '';
+      const raw = String(value).trim();
+      if (!raw) return '';
+      // Nur den Hauptbegriff vor Doppelpunkt/Strich verwenden, z.B. "Erinnern" aus
+      // "Erinnern: Wissen wiedergeben oder abrufen"
+      const head = raw.split(/[:\-–]/)[0].trim();
+      return head.toLowerCase();
+    }
+
+    getFilterState() {
+      const query = (this.filterControls.search?.value || '').toLowerCase().trim();
+      const tags = this.getSelectedValues(this.filterControls.tags).map(v => v.toLowerCase());
+      const phase = (this.filterControls.phase?.value || '').toLowerCase().trim();
+      const group = (this.filterControls.group?.value || '').toLowerCase().trim();
+      const duration = (this.filterControls.duration?.value || '').toLowerCase().trim();
+      const cognitive = (this.filterControls.cognitive?.value || '').trim();
+
+      return { query, tags, phase, group, duration, cognitive };
+    }
+
+    applyFilters() {
+      if (!this.filtersInitialized) return;
+
+      const state = this.getFilterState();
+      let visible = 0;
+      const total = this.filterIndex.length;
+
+      this.filterIndex.forEach(item => {
+        const match = this.matchesCard(item, state);
+        item.el.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+
+      this.updateFilterStatus(visible, total);
+    }
+
+    matchesCard(item, state) {
+      const searchOk = !state.query || item.text.includes(state.query);
+      const tagsOk = !state.tags.length || item.tags.some(t => state.tags.includes(t.norm));
+      const phaseOk =
+        !state.phase ||
+        (Array.isArray(item.phaseNorm)
+          ? item.phaseNorm.some(p => p === state.phase)
+          : item.phaseNorm === state.phase);
+      const groupOk = !state.group || item.groupNorm === state.group;
+      const durationOk = !state.duration || item.durationNorm === state.duration;
+      const stateCog = this.normalizeCognitiveLabel(state.cognitive);
+      const cognitiveOk =
+        !stateCog || item.cognitiveNorm.some(c => c === stateCog);
+      return searchOk && tagsOk && phaseOk && groupOk && durationOk && cognitiveOk;
+    }
+
+    updateFilterStatus(visible, total) {
+      if (!this.filterControls.status) return;
+      if (!total) {
+        this.filterControls.status.textContent = 'Keine Methoden gefunden.';
+        return;
+      }
+      if (visible === 0) {
+        this.filterControls.status.textContent = 'Keine Treffer für die aktuellen Filter.';
+        return;
+      }
+      this.filterControls.status.textContent = `${visible} von ${total} Methoden angezeigt (alle geladen).`;
+    }
+
+    resetFilters() {
+      if (this.filterControls.search) {
+        this.filterControls.search.value = '';
+      }
+      ['tags', 'phase', 'group', 'duration', 'cognitive'].forEach(key => {
+        const el = this.filterControls[key];
+        if (!el) return;
+        if (el.multiple) {
+          Array.from(el.options).forEach(opt => (opt.selected = opt.value === ''));
+        } else {
+          el.value = '';
+        }
+      });
+      this.applyFilters();
     }
 
     extractEntryId(href) {
@@ -1715,7 +2034,12 @@
       if (!moving) return;
       
       const duration = snapDuration(moving.endMin - moving.startMin);
-      const candidate = { ...moving, startMin, endMin: startMin + duration };
+      const candidate = { 
+        ...moving, 
+        startMin, 
+        endMin: startMin + duration,
+        cognitiveLevel: moving.cognitiveLevel // Erhalte cognitiveLevel beim Verschieben
+      };
       
       if (!this.withinBounds(candidate.startMin, candidate.endMin)) {
         return this.warn('Außerhalb des Rasters (08:00–22:00).');
@@ -1760,6 +2084,15 @@
         }
       }
       
+      // Hole cognitiveLevel aus dem Payload oder ggf. aus dem filterIndex
+      let cognitiveLevel = payload.cognitiveLevel ?? null;
+      if (cognitiveLevel === null && payload.entryId && this.filterIndex) {
+        const filterItem = this.filterIndex.find(item => item.el?.dataset?.entryId === payload.entryId);
+        if (filterItem && filterItem.cognitiveLevel !== null && filterItem.cognitiveLevel !== undefined) {
+          cognitiveLevel = filterItem.cognitiveLevel;
+        }
+      }
+      
       const item = {
         uid: randomId(),
         title: payload.title,
@@ -1768,7 +2101,8 @@
         kind: 'method',
         cardHtml: payload.cardHtml || '',
         entryId: payload.entryId || null,
-        details: this.cloneDetails(payloadDetails)
+        details: this.cloneDetails(payloadDetails),
+        cognitiveLevel: cognitiveLevel
       };
       
       if (this.hasCollision(this.plan.days[day], item)) {
@@ -1930,9 +2264,21 @@
           const isShort = durationMinutes <= this.slotMinutes * 2;
           const isPlaceholder = isShort || (placeholderMode && durationMinutes < placeholderThreshold);
           
-          div.className = 'sp-item' +
-            (it.kind === 'break' ? ' sp-item--break' : '') +
-            (isPlaceholder ? ' sp-item--placeholder' : '');
+          // Baue className mit kognitiver Level-Klasse
+          let className = 'sp-item';
+          if (it.kind === 'break') {
+            className += ' sp-item--break';
+          } else {
+            // Füge kognitive Level-Klasse hinzu, falls vorhanden
+            if (it.cognitiveLevel !== null && it.cognitiveLevel !== undefined && it.cognitiveLevel >= 1 && it.cognitiveLevel <= 6) {
+              className += ` sp-level-${it.cognitiveLevel}`;
+            }
+          }
+          if (isPlaceholder) {
+            className += ' sp-item--placeholder';
+          }
+          
+          div.className = className;
           div.style.gridRow = `${startIdx} / ${endIdx}`;
           div.style.gridColumn = '1 / -1';
           div.draggable = true;
@@ -2083,6 +2429,10 @@
         // If only uhrzeit is enabled, still show it
         enabledColumns.push({ key: 'uhrzeit', label: 'Uhrzeit' });
       }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/a1de993a-8495-4f66-85aa-2afc1448bb49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H4',location:'jstemplate.js:renderPrintTable',message:'Render columns',data:{enabled:enabledColumns.map(c=>c.key),gridConfigPresent:!!this.gridConfig,tableColumnsKeys:Object.keys(tableColumns||{})},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       
       const frag = document.createDocumentFragment();
       const activeDays = CONFIG.days.filter(day =>

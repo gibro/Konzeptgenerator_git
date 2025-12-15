@@ -439,6 +439,82 @@
   color: #1d4ed8;
   white-space: nowrap;
 }
+
+/* =========================================
+   KOGNITIVE DIMENSIONEN - FARBCODierung
+   ========================================= */
+/* Level 1: Erinnern (Blau) */
+.sp-card.sp-level-1 {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.sp-item.sp-level-1,
+.sp-item--placeholder.sp-level-1 {
+  background: #bfdbfe;
+  border-color: #60a5fa;
+}
+
+/* Level 2: Verstehen (Bläulich-Türkis) */
+.sp-card.sp-level-2 {
+  background: #cffafe;
+  border-color: #67e8f9;
+}
+
+.sp-item.sp-level-2,
+.sp-item--placeholder.sp-level-2 {
+  background: #a5f3fc;
+  border-color: #22d3ee;
+}
+
+/* Level 3: Anwenden (Grün) */
+.sp-card.sp-level-3 {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+.sp-item.sp-level-3,
+.sp-item--placeholder.sp-level-3 {
+  background: #a7f3d0;
+  border-color: #34d399;
+}
+
+/* Level 4: Analysieren (Gelb/Orange) */
+.sp-card.sp-level-4 {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.sp-item.sp-level-4,
+.sp-item--placeholder.sp-level-4 {
+  background: #fde68a;
+  border-color: #fbbf24;
+}
+
+/* Level 5: Bewerten (Orangerot) */
+.sp-card.sp-level-5 {
+  background: #fed7aa;
+  border-color: #fdba74;
+}
+
+.sp-item.sp-level-5,
+.sp-item--placeholder.sp-level-5 {
+  background: #fec089;
+  border-color: #fb923c;
+}
+
+/* Level 6: Erschaffen (Rot) */
+.sp-card.sp-level-6 {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.sp-item.sp-level-6,
+.sp-item--placeholder.sp-level-6 {
+  background: #fecaca;
+  border-color: #f87171;
+}
+
 /* Utility Classes */
 .sp-hidden-data,
 .sp-hidden {
@@ -1258,6 +1334,45 @@
   align-items: center;
   gap: 6px;
   margin-left: var(--spacing-sm);
+}
+
+.sp-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  align-items: flex-end;
+  margin: var(--spacing-md) 0;
+  padding: var(--spacing-sm);
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.sp-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 180px;
+  flex: 1 1 180px;
+}
+
+.sp-filter__label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: #475569;
+}
+
+.sp-filter__actions {
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  min-width: 180px;
+}
+
+.sp-filter-status {
+  margin: 4px 0 var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: #475569;
 }
 
 .sp-zoom-btn {
