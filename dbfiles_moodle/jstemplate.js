@@ -2323,16 +2323,13 @@
           if (isPlaceholder) {
             div.innerHTML = `
               <div class="sp-item-placeholder" title="${escapeHtml(it.title)}">
-                <span class="sp-placeholder-dot" aria-hidden="true"></span>
                 <span class="sp-placeholder-title" data-full-title="${escapeHtml(it.title)}">${escapeHtml(it.title)}</span>
-                <span class="sp-placeholder-meta">${label(it.startMin)} · ${durationMinutes} Min${it.kind === 'break' ? ' · Pause' : ''}</span>
               </div>
               ${actions}`;
           } else {
             div.innerHTML = `
               <div class="sp-item-content">
                 <div class="sp-title" data-full-title="${escapeHtml(it.title)}">${escapeHtml(it.title)}</div>
-                <div class="sp-meta">${label(it.startMin)}–${label(it.endMin)} · ${durationMinutes} Min</div>
               </div>
               ${actions}`;
           }

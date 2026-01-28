@@ -6,6 +6,7 @@
   <div class="ig-toolbar no-print">
     <span id="ig-edit-slot">##edit##</span>
     <span id="ig-delete-slot">##delete##</span>
+    <button id="ig-csv-export" class="ig-btn ig-btn--secondary" type="button">📊 CSV Export</button>
   </div>
 
   <article class="ig-card">
@@ -191,12 +192,208 @@
 
       const titleText = (document.querySelector('.ig-title')?.textContent || 'diesen Eintrag').trim();
       a.addEventListener('click', (e)=>{
-        const ok = confirm(`Eintrag „${titleText}“ wirklich löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden.`);
+        const ok = confirm(`Eintrag „${titleText}" wirklich löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden.`);
         if(!ok){ e.preventDefault(); }
       });
     }else{
       delSlot.style.display = 'none';
     }
+  }
+
+  // CSV-Export-Funktionalität
+  // Mapping: Feldname -> Überschrift im Template
+  const fieldToHeadingMap = {
+    'Titel': null, // Spezialbehandlung
+    'Seminarphase': 'Seminarphase',
+    'Zeitbedarf': null, // In Meta-Chips
+    'Gruppengröße': null, // In Meta-Chips
+    'Komplexitätsgrad': null, // In Meta-Chips
+    'Vorbereitung nötig': null, // In Meta-Chips
+    'Sozialform': null, // In Meta-Chips
+    'Kognitive Dimension': 'Kognitive Dimension',
+    'Kurzbeschreibung': 'Kurzbeschreibung',
+    'Ablauf': 'Ablauf',
+    'Lernziele (Ich-kann ...)': 'Lernziele (Ich-kann …)',
+    'Debrief/Reflexionsfragen': 'Reflexion',
+    'Risiken/Tipps': 'Risiken & Tipps',
+    'Raumanforderungen': 'Rahmen & Zugänglichkeit',
+    'Materialien': 'Materialien',
+    'H5P-Inhalt': 'H5P-Inhalt',
+    'Material/Technik': 'Material/Technik',
+    'Autor*in / Kontakt': 'Autor*in / Kontakt',
+    'Tags / Schlüsselworte': 'Tags / Schlüsselworte'
+  };
+  
+  // Mapping für Meta-Chips
+  const chipFieldMap = {
+    'Zeitbedarf': 'Zeit:',
+    'Gruppengröße': 'Größe:',
+    'Komplexitätsgrad': 'Komplexität:',
+    'Vorbereitung nötig': 'Vorbereitung:',
+    'Sozialform': 'Sozialform:',
+    'Seminarphase': 'Phase:'
+  };
+  
+  function getFieldValue(fieldName) {
+    // Spezielle Behandlung für Titel
+    if (fieldName === 'Titel') {
+      const titleEl = document.querySelector('.ig-title');
+      if (titleEl) {
+        return extractTextFromElement(titleEl);
+      }
+      return '';
+    }
+    
+    // Suche in Meta-Chips
+    if (chipFieldMap[fieldName]) {
+      const chipLabel = chipFieldMap[fieldName];
+      const chips = document.querySelectorAll('.ig-chip');
+      for (const chip of chips) {
+        const strong = chip.querySelector('strong');
+        if (strong && strong.textContent.includes(chipLabel)) {
+          const valueEl = chip.querySelector('.js-value');
+          if (valueEl) {
+            return extractTextFromElement(valueEl);
+          }
+        }
+      }
+    }
+    
+    // Seminarphase kann auch im Header sein
+    if (fieldName === 'Seminarphase') {
+      const subEl = document.querySelector('.ig-sub .js-value');
+      if (subEl) {
+        return extractTextFromElement(subEl);
+      }
+    }
+    
+    // Suche nach Section mit passendem Titel
+    const headingText = fieldToHeadingMap[fieldName];
+    if (headingText) {
+      const sections = document.querySelectorAll('.ig-section');
+      for (const section of sections) {
+        const heading = section.querySelector('h3');
+        if (heading) {
+          const headingTextContent = heading.textContent.trim();
+          // Prüfe auf exakte Übereinstimmung oder Teilübereinstimmung
+          if (headingTextContent === headingText || 
+              headingTextContent.includes(headingText) ||
+              headingText.includes(headingTextContent)) {
+            const valueEl = section.querySelector('.js-value');
+            if (valueEl) {
+              return extractTextFromElement(valueEl);
+            }
+          }
+        }
+      }
+    }
+    
+    // Spezielle Behandlung für Raumanforderungen (in kv-row)
+    if (fieldName === 'Raumanforderungen') {
+      const rahmen = document.getElementById('rahmen');
+      if (rahmen) {
+        const kvRows = rahmen.querySelectorAll('.kv-row');
+        for (const kvRow of kvRows) {
+          const dt = kvRow.querySelector('dt');
+          if (dt && dt.textContent.trim() === 'Raumanforderungen') {
+            const valueEl = kvRow.querySelector('.js-value');
+            if (valueEl) {
+              return extractTextFromElement(valueEl);
+            }
+          }
+        }
+      }
+    }
+    
+    return '';
+  }
+  
+  function extractTextFromElement(el) {
+    if (!el) return '';
+    
+    // Für Dateifelder: Extrahiere Links mit HTML
+    const links = el.querySelectorAll('a[href]');
+    if (links.length > 0) {
+      // Behalte HTML-Formatierung für Links
+      const clone = el.cloneNode(true);
+      clone.querySelectorAll('script, style').forEach(s => s.remove());
+      return clone.innerHTML.trim();
+    }
+    
+    // Für normale Textfelder: HTML beibehalten
+    const clone = el.cloneNode(true);
+    // Entferne nur Scripts und Styles, behalte alles andere
+    clone.querySelectorAll('script, style').forEach(s => s.remove());
+    // Behalte HTML-Formatierung (Listen, Überschriften, Absätze, etc.)
+    return clone.innerHTML.trim();
+  }
+  
+  function escapeCsvField(field) {
+    if (!field) return '';
+    const text = String(field);
+    // HTML kann Anführungszeichen, Kommas und Zeilenumbrüche enthalten
+    // Immer in Anführungszeichen setzen und doppelte Anführungszeichen escapen
+    return '"' + text.replace(/"/g, '""') + '"';
+  }
+  
+  function exportToCSV() {
+    const title = getFieldValue('Titel') || 'Unbenannt';
+    
+    // Feldmapping: Feldname -> Anzeigename
+    const fields = [
+      { name: 'Titel', label: 'Titel' },
+      { name: 'Seminarphase', label: 'Seminarphase' },
+      { name: 'Zeitbedarf', label: 'Zeitbedarf' },
+      { name: 'Gruppengröße', label: 'Gruppengröße' },
+      { name: 'Komplexitätsgrad', label: 'Komplexitätsgrad' },
+      { name: 'Vorbereitung nötig', label: 'Vorbereitung nötig' },
+      { name: 'Sozialform', label: 'Sozialform' },
+      { name: 'Kognitive Dimension', label: 'Kognitive Dimension' },
+      { name: 'Kurzbeschreibung', label: 'Kurzbeschreibung' },
+      { name: 'Ablauf', label: 'Ablauf' },
+      { name: 'Lernziele (Ich-kann ...)', label: 'Lernziele (Ich-kann ...)' },
+      { name: 'Debrief/Reflexionsfragen', label: 'Debrief/Reflexionsfragen' },
+      { name: 'Risiken/Tipps', label: 'Risiken/Tipps' },
+      { name: 'Raumanforderungen', label: 'Raumanforderungen' },
+      { name: 'Materialien', label: 'Materialien' },
+      { name: 'H5P-Inhalt', label: 'H5P-Inhalt' },
+      { name: 'Material/Technik', label: 'Material/Technik' },
+      { name: 'Autor*in / Kontakt', label: 'Autor*in / Kontakt' },
+      { name: 'Tags / Schlüsselworte', label: 'Tags / Schlüsselworte' }
+    ];
+    
+    // CSV-Header erstellen
+    const headers = fields.map(f => escapeCsvField(f.label));
+    
+    // CSV-Daten erstellen
+    const values = fields.map(f => escapeCsvField(getFieldValue(f.name)));
+    
+    // CSV zusammenfügen
+    const csvContent = [
+      headers.join(','),
+      values.join(',')
+    ].join('\n');
+    
+    // BOM für Excel-Kompatibilität hinzufügen (UTF-8)
+    const BOM = '\uFEFF';
+    const csvWithBOM = BOM + csvContent;
+    
+    // Download erstellen
+    const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/[^a-z0-9]/gi, '_')}_export.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+  
+  // CSV-Export-Button Event Listener
+  const csvExportBtn = document.getElementById('ig-csv-export');
+  if(csvExportBtn){
+    csvExportBtn.addEventListener('click', exportToCSV);
   }
 })();
 </script>

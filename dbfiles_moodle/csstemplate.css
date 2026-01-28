@@ -312,7 +312,7 @@
   margin: var(--spacing-xs);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
-  padding: var(--spacing-xs) 72px var(--spacing-xs) var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   font-size: 13px;
   background: #ecfeff;
   pointer-events: auto;
@@ -337,9 +337,9 @@
 .sp-item .sp-title {
   font-weight: 600;
   line-height: 1.25;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
   position: relative;
   cursor: help;
 }
@@ -468,9 +468,9 @@
 
 .sp-placeholder-title {
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
   position: relative;
   cursor: help;
 }
@@ -1642,6 +1642,16 @@
   border-color: var(--color-danger);
   background: var(--color-danger);
   color: var(--color-background);
+}
+
+.ig-btn--secondary {
+  border-color: var(--color-text-muted);
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.ig-btn--secondary:hover {
+  background: var(--color-background-light);
 }
 
 /* .no-print removed - no longer needed */
