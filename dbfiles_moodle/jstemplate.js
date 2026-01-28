@@ -219,7 +219,6 @@
       
       this.timesContainer = document.getElementById('sp-times');
       this.msg = document.getElementById('sp-msg');
-      this.printTable = document.getElementById('sp-print-table');
       
       this.wrapper.style.setProperty('--slot-height', this.slotPx + 'px');
     }
@@ -328,9 +327,33 @@
       }
 
       // Export/Import
-      const exportBtn = document.getElementById('sp-export');
-      if (exportBtn) {
-        exportBtn.addEventListener('click', () => this.exportPlan());
+      const exportJsonBtn = document.getElementById('sp-export-json');
+      if (exportJsonBtn) {
+        exportJsonBtn.addEventListener('click', () => this.exportPlan());
+      }
+      
+      const exportPdfZimBtn = document.getElementById('sp-export-pdf-zim');
+      if (exportPdfZimBtn) {
+        exportPdfZimBtn.addEventListener('click', () => {
+          try {
+            this.exportPDFZIM();
+          } catch (error) {
+            this.warn('PDF-Export fehlgeschlagen. Bitte versuchen Sie es erneut.');
+            console.error('PDF Export Error:', error);
+          }
+        });
+      }
+      
+      const exportPdfFullBtn = document.getElementById('sp-export-pdf-full');
+      if (exportPdfFullBtn) {
+        exportPdfFullBtn.addEventListener('click', async () => {
+          try {
+            await this.exportPDFWithAttachments();
+          } catch (error) {
+            this.warn('PDF-Export fehlgeschlagen. Bitte versuchen Sie es erneut.');
+            console.error('PDF Export Error:', error);
+          }
+        });
       }
 
       const importInput = document.getElementById('sp-import');
@@ -344,10 +367,6 @@
         clearBtn.addEventListener('click', () => this.clearPlan());
       }
 
-      const printBtn = document.getElementById('sp-print');
-      if (printBtn) {
-        printBtn.addEventListener('click', () => window.print());
-      }
 
       // Break modal
       const addBreakBtn = document.getElementById('sp-addbreak');
@@ -1009,10 +1028,7 @@
       
       this.rebuildGrid();
       
-      // Update print table with new column configuration
-      console.log('Calling renderPrintTable...');
-      console.log('gridConfig in renderPrintTable context:', this.gridConfig);
-      this.renderPrintTable();
+      // Print table removed - now using PDF export
       
       this.closeConfigModal();
       this.clearWarn();
@@ -1301,7 +1317,7 @@
     savePlan() {
       this.hydratePlanDetailsFromLookup();
       this.renderOverlays();
-      this.renderPrintTable();
+      // Print table removed - now using PDF export
       this.updateSums();
       localStorage.setItem(CONFIG.storageKey, JSON.stringify(this.plan));
     }
@@ -1393,7 +1409,7 @@
       this.normalizeSidebar();
       this.hydratePlanDetailsFromLookup();
       this.renderOverlays();
-      this.renderPrintTable();
+      // Print table removed - now using PDF export
       this.updateSums();
       
       if (preserveScroll && scrollMemory) {
@@ -1573,6 +1589,12 @@
         const durationRaw = (card.querySelector('.sp-duration')?.textContent || '').toString();
         const durationValue = parseInt(durationRaw.replace(/\D+/g, ''), 10);
         const dur = snapDuration(Number.isFinite(durationValue) ? durationValue : CONFIG.baseSlotMinutes);
+        
+        // Setze data-full-title für Tooltip
+        const titletextEl = card.querySelector('.sp-titletext');
+        if (titletextEl && titleText) {
+          titletextEl.setAttribute('data-full-title', titleText);
+        }
         
         card.style.removeProperty('min-height');
 
@@ -2302,14 +2324,14 @@
             div.innerHTML = `
               <div class="sp-item-placeholder" title="${escapeHtml(it.title)}">
                 <span class="sp-placeholder-dot" aria-hidden="true"></span>
-                <span class="sp-placeholder-title">${escapeHtml(it.title)}</span>
+                <span class="sp-placeholder-title" data-full-title="${escapeHtml(it.title)}">${escapeHtml(it.title)}</span>
                 <span class="sp-placeholder-meta">${label(it.startMin)} · ${durationMinutes} Min${it.kind === 'break' ? ' · Pause' : ''}</span>
               </div>
               ${actions}`;
           } else {
             div.innerHTML = `
               <div class="sp-item-content">
-                <div class="sp-title">${escapeHtml(it.title)}</div>
+                <div class="sp-title" data-full-title="${escapeHtml(it.title)}">${escapeHtml(it.title)}</div>
                 <div class="sp-meta">${label(it.startMin)}–${label(it.endMin)} · ${durationMinutes} Min</div>
               </div>
               ${actions}`;
@@ -2320,216 +2342,7 @@
       });
     }
 
-    renderPrintList() {
-      if (!this.printList) return;
-      
-      const frag = document.createDocumentFragment();
-      const activeDays = CONFIG.days.filter(day =>
-        (this.plan.days[day] || []).some(entry => entry && entry.kind !== 'break')
-      );
-      
-      activeDays.forEach(day => {
-        const methods = (this.plan.days[day] || [])
-          .filter(item => item && item.kind !== 'break')
-          .slice()
-          .sort((a, b) => a.startMin - b.startMin);
-        
-        if (!methods.length) return;
-
-        const daySection = document.createElement('section');
-        daySection.className = 'sp-print-day';
-
-        const heading = document.createElement('h2');
-        heading.className = 'sp-print-day__title';
-        heading.textContent = day;
-        daySection.appendChild(heading);
-
-        methods.forEach(item => {
-          const duration = Math.max(CONFIG.baseSlotMinutes, item.endMin - item.startMin);
-          const details = this.getItemDetails(item);
-          const card = document.createElement('article');
-          card.className = 'sp-print-card';
-
-          const header = document.createElement('header');
-          header.className = 'sp-print-card__header';
-          header.innerHTML = `
-            <div class="sp-print-card__heading">
-              <h3 class="sp-print-card__name">${escapeHtml(item.title)}</h3>
-              <div class="sp-print-card__time">${label(item.startMin)}–${label(item.endMin)} · ${duration} Min</div>
-            </div>`;
-          card.appendChild(header);
-
-          const body = document.createElement('div');
-          body.className = 'sp-print-card__body';
-
-          this.appendPrintSection(body, 'Kurzbeschreibung', details.description);
-          this.appendPrintSection(body, 'Ablauf', details.flow);
-          this.appendPrintSection(body, 'Reflexion', details.reflection);
-          this.appendPrintSection(body, 'Raumanforderungen &amp; Material/Technik', this.combineRequirements(details));
-          this.appendPrintSection(body, 'Materialien', details.resources);
-          this.appendPrintSection(body, 'Risiken & Tipps', details.risks);
-          this.appendPrintSection(body, 'Lernziele', details.objectives);
-          this.appendPrintSection(body, 'Kontakt', details.contact);
-
-          if (body.children.length) {
-            card.appendChild(body);
-          }
-
-          daySection.appendChild(card);
-        });
-
-        frag.appendChild(daySection);
-      });
-      
-      this.printList.innerHTML = '';
-      this.printList.appendChild(frag);
-      this.printList.setAttribute('aria-hidden', this.printList.childElementCount ? 'false' : 'true');
-    }
-
-    renderPrintTable() {
-      if (!this.printTable) return;
-      
-      // Get table columns configuration
-      const tableColumns = (this.gridConfig && this.gridConfig.tableColumns) || {
-        uhrzeit: true,
-        title: true,
-        description: false,
-        flow: true,
-        objectives: true,
-        risks: false,
-        materials: true,
-        sonstiges: false
-      };
-      
-      console.log('renderPrintTable - gridConfig:', this.gridConfig);
-      console.log('renderPrintTable - tableColumns:', tableColumns);
-      
-      // Define column order and labels - FESTE REIHENFOLGE
-      const columnDefinitions = [
-        { key: 'uhrzeit', label: 'Uhrzeit' },
-        { key: 'title', label: 'Titel der Methode' },
-        { key: 'objectives', label: 'Lernziele' },
-        { key: 'description', label: 'Kurzbeschreibung' },
-        { key: 'flow', label: 'Ablauf' },
-        { key: 'risks', label: 'Risiken/Tipps' },
-        { key: 'materials', label: 'Material/Technik' },
-        { key: 'sonstiges', label: 'Sonstiges' }
-      ];
-      
-      // Filter to only enabled columns (uhrzeit is always enabled)
-      const enabledColumns = columnDefinitions.filter(col => {
-        const isEnabled = tableColumns[col.key] === true;
-        console.log(`Column ${col.key}: ${isEnabled} (value: ${tableColumns[col.key]})`);
-        return isEnabled;
-      });
-      
-      console.log('Enabled columns:', enabledColumns.map(c => c.key));
-      
-      if (enabledColumns.length === 0) {
-        // If only uhrzeit is enabled, still show it
-        enabledColumns.push({ key: 'uhrzeit', label: 'Uhrzeit' });
-      }
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/a1de993a-8495-4f66-85aa-2afc1448bb49',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:'debug-session',runId:'run1',hypothesisId:'H4',location:'jstemplate.js:renderPrintTable',message:'Render columns',data:{enabled:enabledColumns.map(c=>c.key),gridConfigPresent:!!this.gridConfig,tableColumnsKeys:Object.keys(tableColumns||{})},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      
-      const frag = document.createDocumentFragment();
-      const activeDays = CONFIG.days.filter(day =>
-        (this.plan.days[day] || []).some(entry => entry && entry.kind !== 'break')
-      );
-      
-      activeDays.forEach(day => {
-        const methods = (this.plan.days[day] || [])
-          .filter(entry => entry && entry.kind !== 'break')
-          .slice()
-          .sort((a, b) => a.startMin - b.startMin);
-        
-        if (!methods.length) return;
-        
-        const section = document.createElement('section');
-        section.className = 'sp-table-day';
-        const heading = document.createElement('h2');
-        heading.className = 'sp-table-day__title';
-        heading.textContent = day;
-        section.appendChild(heading);
-
-        const table = document.createElement('table');
-        table.className = 'sp-table';
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        
-        // Generate header cells
-        enabledColumns.forEach(col => {
-          const th = document.createElement('th');
-          th.textContent = col.label;
-          headerRow.appendChild(th);
-        });
-        
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-        const tbody = document.createElement('tbody');
-
-        methods.forEach(item => {
-          const details = this.getItemDetails(item);
-          const row = document.createElement('tr');
-
-          // Generate cells for each enabled column
-          enabledColumns.forEach(col => {
-            const cell = document.createElement('td');
-            let cellContent = '';
-            
-            switch (col.key) {
-              case 'uhrzeit':
-                cellContent = `${label(item.startMin)} – ${label(item.endMin)}`;
-                cell.textContent = cellContent;
-                break;
-              case 'title':
-                const title = item.title || (item.entryId && this.cardLookup[item.entryId] && this.cardLookup[item.entryId].title) || '';
-                cell.innerHTML = this.formatTableCellText(title);
-                break;
-              case 'description':
-                cell.innerHTML = this.formatTableCellText(details.description);
-                break;
-              case 'flow':
-                cell.innerHTML = this.formatTableCellText(details.flow);
-                break;
-              case 'objectives':
-                cell.innerHTML = this.formatTableCellText(details.objectives);
-                break;
-              case 'risks':
-                cell.innerHTML = this.formatTableCellText(details.risks);
-                break;
-              case 'materials':
-                cell.innerHTML = this.formatTableCellText(details.materials);
-                break;
-              case 'sonstiges':
-                // Empty cell for handwritten additions (no content, just empty)
-                cell.innerHTML = '';
-                break;
-              default:
-                cell.innerHTML = '—';
-            }
-            
-            row.appendChild(cell);
-          });
-
-          tbody.appendChild(row);
-        });
-
-        table.appendChild(tbody);
-        section.appendChild(table);
-        frag.appendChild(section);
-      });
-
-      this.printTable.innerHTML = '';
-      if (frag.childElementCount > 0) {
-        this.printTable.appendChild(frag);
-        this.printTable.style.display = 'block';
-      } else {
-        this.printTable.style.display = 'none';
-      }
-    }
+    // Print functions removed - now using PDF export
 
     updateSums() {
       CONFIG.days.forEach(day => {
@@ -2558,14 +2371,7 @@
       return trimmed.replace(/\r?\n/g, '<br>');
     }
 
-    appendPrintSection(container, label, value) {
-      const html = this.normalizeContent(value);
-      if (!html) return;
-      const section = document.createElement('section');
-      section.className = 'sp-print-card__section';
-      section.innerHTML = `<h3>${label}</h3><div>${html}</div>`;
-      container.appendChild(section);
-    }
+    // appendPrintSection removed - now using PDF export
 
     combineRequirements(details) {
       const segments = [];
@@ -2667,17 +2473,9 @@
     }
 
     updatePrintHeader(meta) {
-      const $phTitle = document.getElementById('sp-ph-title');
-      const $phDate = document.getElementById('sp-ph-date');
-      const $phNumber = document.getElementById('sp-ph-number');
-      const $phContact = document.getElementById('sp-ph-contact');
+      // Update main title with meta information (used for display, not print)
       const $printTitle = document.getElementById('sp-print-title');
       const defaultPrintTitle = 'Seminarplaner (Drag & Drop)';
-      
-      if ($phTitle) $phTitle.textContent = meta.title || '—';
-      if ($phDate) $phDate.textContent = meta.date || '—';
-      if ($phNumber) $phNumber.textContent = meta.number || '—';
-      if ($phContact) $phContact.textContent = meta.contact || '—';
       
       if ($printTitle) {
         const parts = [];
@@ -2771,6 +2569,929 @@
         list[idx] = candidate;
         this.savePlan();
         this.clearWarn();
+      }
+    }
+
+    // =========================================
+    // PDF EXPORT FUNCTIONS
+    // =========================================
+    
+    // Helper Functions
+    formatTimeForPDF(minutes) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      if (hours > 0) {
+        return `${hours}:${String(mins).padStart(2, '0')}`;
+      }
+      return `${mins}`;
+    }
+
+    escapeTextForPDF(text) {
+      if (!text) return '';
+      const raw = typeof text === 'string' ? text : String(text);
+      // Remove HTML tags and decode entities
+      const div = document.createElement('div');
+      div.innerHTML = raw;
+      let plainText = div.textContent || div.innerText || '';
+      // Replace line breaks with spaces
+      plainText = plainText.replace(/\r?\n/g, ' ');
+      // Remove multiple spaces
+      plainText = plainText.replace(/\s+/g, ' ').trim();
+      return plainText;
+    }
+
+    // Render HTML content to PDF with formatting support
+    renderHTMLToPDF(doc, html, x, y, maxWidth) {
+      if (!html) return y;
+      
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      
+      let currentY = y;
+      const lineHeight = 5;
+      const fontSize = doc.getFontSize();
+      const originalFont = doc.getFont();
+      const originalStyle = doc.getFont().fontStyle || 'normal';
+      let isFirstElement = true;
+      
+      const processNode = (node, indent = 0) => {
+        if (currentY > 280) {
+          doc.addPage();
+          currentY = 20;
+        }
+        
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent;
+          if (text.trim()) {
+            const lines = doc.splitTextToSize(text, maxWidth - indent);
+            doc.text(lines, x + indent, currentY);
+            currentY += lines.length * lineHeight;
+          } else if (text.includes('\n')) {
+            // Preserve line breaks from text nodes
+            currentY += lineHeight;
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const tagName = node.tagName.toLowerCase();
+          const savedFontName = doc.getFont().fontName;
+          const savedStyle = doc.getFont().fontStyle || 'normal';
+          
+          // Handle formatting tags
+          if (tagName === 'strong' || tagName === 'b') {
+            doc.setFont(undefined, 'bold');
+            Array.from(node.childNodes).forEach(child => processNode(child, indent));
+            doc.setFont(savedFontName, savedStyle);
+          } else if (tagName === 'em' || tagName === 'i') {
+            doc.setFont(undefined, 'italic');
+            Array.from(node.childNodes).forEach(child => processNode(child, indent));
+            doc.setFont(savedFontName, savedStyle);
+          } else if (tagName === 'br') {
+            currentY += lineHeight;
+          } else if (tagName === 'p') {
+            if (!isFirstElement && currentY > y) {
+              currentY += lineHeight; // Space before paragraph
+            }
+            isFirstElement = false;
+            Array.from(node.childNodes).forEach(child => processNode(child, indent));
+            currentY += lineHeight; // Space after paragraph
+          } else if (tagName === 'ul' || tagName === 'ol') {
+            // Fast hintereinander, praktisch kein zusätzlicher Außenabstand
+            if (!isFirstElement) currentY += lineHeight * 0.1;
+            isFirstElement = false;
+            Array.from(node.childNodes).forEach(child => {
+              if (child.nodeType === Node.ELEMENT_NODE && child.tagName.toLowerCase() === 'li') {
+                processNode(child, indent);
+              }
+            });
+            currentY += lineHeight * 0.1;
+          } else if (tagName === 'li') {
+            const marker = '• ';
+            doc.text(marker, x + indent, currentY);
+            Array.from(node.childNodes).forEach(child => processNode(child, indent + 10));
+            currentY += lineHeight * 0.35; // sehr kompakt zwischen Items
+          } else if (tagName === 'div') {
+            // Process divs recursively
+            Array.from(node.childNodes).forEach(child => processNode(child, indent));
+          } else {
+            // Process other elements recursively
+            Array.from(node.childNodes).forEach(child => processNode(child, indent));
+          }
+        }
+      };
+      
+      // Reset font to original
+      doc.setFont(originalFont.fontName, originalStyle);
+      doc.setFontSize(fontSize);
+      
+      Array.from(div.childNodes).forEach(child => {
+        processNode(child);
+        isFirstElement = false;
+      });
+      
+      return currentY;
+    }
+
+    getMethodDetailsForExport(item) {
+      return this.getItemDetails(item);
+    }
+
+    parseMaterialLinks(html) {
+      if (!html) return [];
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      const links = div.querySelectorAll('a[href]');
+      const urls = [];
+      links.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href && (href.startsWith('http') || href.startsWith('/'))) {
+          urls.push({
+            url: href,
+            text: link.textContent.trim(),
+            extension: this.getFileExtension(href)
+          });
+        }
+      });
+      return urls;
+    }
+
+    getFileExtension(url) {
+      const match = url.match(/\.([a-z0-9]+)(?:\?|$)/i);
+      return match ? match[1].toLowerCase() : '';
+    }
+
+    async loadFileAsBase64(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (error) {
+        throw error;
+      }
+    }
+
+    async embedImageInPDF(doc, imageUrl) {
+      try {
+        const base64 = await this.loadFileAsBase64(imageUrl);
+        const img = new Image();
+        return new Promise((resolve, reject) => {
+          img.onload = () => {
+            try {
+              const imgWidth = doc.internal.pageSize.getWidth() - 40;
+              const imgHeight = (img.height * imgWidth) / img.width;
+              
+              if (doc.internal.getCurrentPageInfo().pageNumber > 1 || doc.lastAutoTable.finalY > 20) {
+                doc.addPage();
+              }
+              
+              const yPos = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 20;
+              doc.addImage(base64, 'JPEG', 20, yPos, imgWidth, imgHeight);
+              resolve(true);
+            } catch (err) {
+              reject(err);
+            }
+          };
+          img.onerror = () => reject(new Error('Image load failed'));
+          img.src = base64;
+        });
+      } catch (error) {
+        return { error: error.message, url: imageUrl };
+      }
+    }
+
+    async extractAndProcessZip(zipUrl) {
+      try {
+        const response = await fetch(zipUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        const zip = await JSZip.loadAsync(blob);
+        const files = [];
+        
+        for (const [filename, file] of Object.entries(zip.files)) {
+          if (!file.dir) {
+            const content = await file.async('blob');
+            const extension = this.getFileExtension(filename);
+            files.push({
+              filename,
+              extension,
+              blob: content,
+              url: URL.createObjectURL(content)
+            });
+          }
+        }
+        
+        return files;
+      } catch (error) {
+        return { error: error.message, url: zipUrl };
+      }
+    }
+
+    async handleWordFile(wordUrl, mainDoc) {
+      try {
+        const response = await fetch(wordUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const result = await mammoth.convertToHtml({ arrayBuffer });
+        
+        // Add Word content to main PDF
+        let yPos = 20;
+        if (mainDoc.lastAutoTable) {
+          yPos = mainDoc.lastAutoTable.finalY + 10;
+        }
+        if (yPos > 250) {
+          mainDoc.addPage();
+          yPos = 20;
+        }
+        
+        mainDoc.setFontSize(10);
+        mainDoc.setFont(undefined, 'normal');
+        
+        // Convert HTML to plain text for PDF
+        const div = document.createElement('div');
+        div.innerHTML = result.value;
+        const plainText = div.textContent || div.innerText || '';
+        const text = this.escapeTextForPDF(plainText);
+        const lines = mainDoc.splitTextToSize(text, 180);
+        mainDoc.text(lines, 14, yPos);
+        
+        return { success: true, url: wordUrl };
+      } catch (error) {
+        return { error: error.message, url: wordUrl };
+      }
+    }
+
+    async mergePDFPages(doc, pdfUrl) {
+      try {
+        // Simply add a link to the PDF file (no embedding)
+        const yPos = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 20;
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text('PDF-Datei:', 14, yPos);
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        const urlLines = doc.splitTextToSize(pdfUrl, 180);
+        
+        // Add text and link
+        let currentLinkY = yPos + 8;
+        urlLines.forEach((line, index) => {
+          const lineY = currentLinkY + (index * 5);
+          doc.text(line, 14, lineY);
+          // Add clickable link
+          const textWidth = doc.getTextWidth(line);
+          doc.link(14, lineY - 4, textWidth, 5, { url: pdfUrl });
+        });
+        
+        return { success: true, url: pdfUrl };
+      } catch (error) {
+        // Fallback: add link as plain text
+        const yPos = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 20;
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.text(`PDF-Datei: ${pdfUrl}`, 14, yPos);
+        return { error: error.message, url: pdfUrl };
+      }
+    }
+
+    async processMaterialFiles(materialsHTML, doc) {
+      if (!materialsHTML) return [];
+      
+      const links = this.parseMaterialLinks(materialsHTML);
+      const results = [];
+      
+      for (const link of links) {
+        const { url, extension } = link;
+        
+        try {
+          if (extension === 'zip') {
+            const zipFiles = await this.extractAndProcessZip(url);
+            if (zipFiles.error) {
+              results.push({ type: 'link', url, error: zipFiles.error });
+            } else {
+              for (const file of zipFiles) {
+                if (['jpg', 'jpeg', 'png'].includes(file.extension)) {
+                  const result = await this.embedImageInPDF(doc, file.url);
+                  if (result.error) {
+                    results.push({ type: 'link', url: file.url, error: result.error });
+                  } else {
+                    results.push({ type: 'image', url: file.url, embedded: true });
+                  }
+                } else if (file.extension === 'pdf') {
+                  const result = await this.mergePDFPages(doc, file.url);
+                  if (result.error) {
+                    results.push({ type: 'link', url: file.url, error: result.error });
+                  } else {
+                    results.push({ type: 'pdf', url: file.url, merged: true });
+                  }
+                } else if (['doc', 'docx'].includes(file.extension)) {
+                  const result = await this.handleWordFile(file.url, doc);
+                  if (result.error) {
+                    results.push({ type: 'link', url: file.url, error: result.error });
+                  } else {
+                    results.push({ type: 'word', url: file.url, converted: true });
+                  }
+                } else {
+                  results.push({ type: 'link', url: file.url });
+                }
+              }
+            }
+          } else if (['jpg', 'jpeg', 'png'].includes(extension)) {
+            const result = await this.embedImageInPDF(doc, url);
+            if (result.error) {
+              results.push({ type: 'link', url, error: result.error });
+            } else {
+              results.push({ type: 'image', url, embedded: true });
+            }
+          } else if (extension === 'pdf') {
+            const result = await this.mergePDFPages(doc, url);
+            if (result.error) {
+              results.push({ type: 'link', url, error: result.error });
+            } else {
+              results.push({ type: 'pdf', url, merged: true });
+            }
+          } else if (['doc', 'docx'].includes(extension)) {
+            const result = await this.handleWordFile(url, doc);
+            if (result.error) {
+              results.push({ type: 'link', url, error: result.error });
+            } else {
+              results.push({ type: 'word', url, converted: true });
+            }
+          } else {
+            results.push({ type: 'link', url });
+          }
+        } catch (error) {
+          results.push({ type: 'link', url, error: error.message });
+        }
+      }
+      
+      return results;
+    }
+
+    // PDF Export Functions
+    exportPDFConceptCollection() {
+      try {
+        if (typeof window.jspdf === 'undefined') {
+          this.warn('PDF-Bibliothek nicht geladen. Bitte Seite neu laden.');
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const meta = this.loadMeta();
+
+        // Header
+        let headerText = 'Konzeptsammlung';
+        if (meta.title) headerText += ' - ' + meta.title;
+        if (meta.date) headerText += ' (' + meta.date + ')';
+        doc.setFontSize(16);
+        doc.text(headerText, 14, 20);
+
+        const activeDays = CONFIG.days.filter(day =>
+          (this.plan.days[day] || []).some(entry => entry && entry.kind !== 'break')
+        );
+
+        let yPos = 30;
+        activeDays.forEach(day => {
+          const methods = (this.plan.days[day] || [])
+            .filter(item => item && item.kind !== 'break')
+            .slice()
+            .sort((a, b) => a.startMin - b.startMin);
+
+          if (methods.length === 0) return;
+
+          // Day heading
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+
+          doc.setFontSize(14);
+          doc.setFont(undefined, 'bold');
+          doc.text(day, 14, yPos);
+          yPos += 10;
+
+          methods.forEach(item => {
+            const duration = Math.max(CONFIG.baseSlotMinutes, item.endMin - item.startMin);
+            const details = this.getItemDetails(item);
+
+            // Check if we need a new page
+            if (yPos > 250) {
+              doc.addPage();
+              yPos = 20;
+            }
+
+            // Method title
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(this.escapeTextForPDF(item.title), 14, yPos);
+            yPos += 8;
+
+            // Time and duration
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const timeText = `${this.formatTimeForPDF(item.startMin)}–${this.formatTimeForPDF(item.endMin)} · ${duration} Min`;
+            doc.text(timeText, 14, yPos);
+            yPos += 10;
+
+            // Sections
+            const sections = [
+              { label: 'Kurzbeschreibung', content: details.description },
+              { label: 'Ablauf', content: details.flow },
+              { label: 'Reflexion', content: details.reflection },
+              { label: 'Raumanforderungen & Material/Technik', content: this.combineRequirements(details) },
+              { label: 'Materialien', content: details.resources },
+              { label: 'Lernziele', content: details.objectives },
+              { label: 'Risiken & Tipps', content: details.risks },
+              { label: 'Kontakt', content: details.contact }
+            ];
+
+            sections.forEach(section => {
+              if (!section.content || !section.content.trim()) return;
+
+              if (yPos > 250) {
+                doc.addPage();
+                yPos = 20;
+              }
+
+              doc.setFontSize(11);
+              doc.setFont(undefined, 'bold');
+              doc.text(section.label + ':', 14, yPos);
+              yPos += 6;
+
+              doc.setFontSize(10);
+              doc.setFont(undefined, 'normal');
+              yPos = this.renderHTMLToPDF(doc, section.content, 14, yPos, 180);
+              yPos += 5;
+            });
+
+            yPos += 10; // Space between methods
+          });
+        });
+
+        // Save
+        const filename = meta.title ? `Konzeptsammlung-${meta.title}.pdf` : 'Konzeptsammlung.pdf';
+        doc.save(filename);
+        this.clearWarn();
+      } catch (error) {
+        this.warn('PDF-Export fehlgeschlagen: ' + error.message);
+        console.error('PDF Export Error:', error);
+      }
+    }
+
+    exportPDFZIM() {
+      try {
+        if (typeof window.jspdf === 'undefined') {
+          this.warn('PDF-Bibliothek nicht geladen. Bitte Seite neu laden.');
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const meta = this.loadMeta();
+
+        // Header
+        let headerText = 'ZIM-Papier';
+        if (meta.title) headerText += ' - ' + meta.title;
+        if (meta.date) headerText += ' (' + meta.date + ')';
+        doc.setFontSize(16);
+        doc.text(headerText, 14, 20);
+
+        // Get table columns configuration
+        const tableColumns = (this.gridConfig && this.gridConfig.tableColumns) || {
+          uhrzeit: true,
+          title: true,
+          description: false,
+          flow: true,
+          objectives: true,
+          risks: false,
+          materials: true,
+          sonstiges: false
+        };
+
+        const columnDefinitions = [
+          { key: 'uhrzeit', label: 'Uhrzeit' },
+          { key: 'title', label: 'Titel der Methode' },
+          { key: 'objectives', label: 'Lernziele' },
+          { key: 'description', label: 'Kurzbeschreibung' },
+          { key: 'flow', label: 'Ablauf' },
+          { key: 'risks', label: 'Risiken/Tipps' },
+          { key: 'materials', label: 'Material/Technik' },
+          { key: 'sonstiges', label: 'Sonstiges' }
+        ];
+
+        const enabledColumns = columnDefinitions.filter(col => {
+          return tableColumns[col.key] === true;
+        });
+
+        if (enabledColumns.length === 0) {
+          enabledColumns.push({ key: 'uhrzeit', label: 'Uhrzeit' });
+        }
+
+        // Build table data
+        const activeDays = CONFIG.days.filter(day =>
+          (this.plan.days[day] || []).some(entry => entry && entry.kind !== 'break')
+        );
+
+        const tableData = [];
+        activeDays.forEach(day => {
+          const methods = (this.plan.days[day] || [])
+            .filter(entry => entry && entry.kind !== 'break')
+            .slice()
+            .sort((a, b) => a.startMin - b.startMin);
+
+          methods.forEach(item => {
+            const details = this.getItemDetails(item);
+            const row = [];
+
+            enabledColumns.forEach(col => {
+              let cellContent = '';
+              
+              switch (col.key) {
+                case 'uhrzeit':
+                  cellContent = `${this.formatTimeForPDF(item.startMin)} – ${this.formatTimeForPDF(item.endMin)}`;
+                  break;
+                case 'title':
+                  cellContent = this.escapeTextForPDF(item.title || '');
+                  break;
+                case 'description':
+                  cellContent = this.escapeTextForPDF(details.description);
+                  break;
+                case 'flow':
+                  cellContent = this.escapeTextForPDF(details.flow);
+                  break;
+                case 'objectives':
+                  cellContent = this.escapeTextForPDF(details.objectives);
+                  break;
+                case 'risks':
+                  cellContent = this.escapeTextForPDF(details.risks);
+                  break;
+                case 'materials':
+                  cellContent = this.escapeTextForPDF(details.materials);
+                  break;
+                case 'sonstiges':
+                  cellContent = '';
+                  break;
+                default:
+                  cellContent = '—';
+              }
+              
+              row.push(cellContent || '—');
+            });
+
+            tableData.push(row);
+          });
+        });
+
+        // Add table with custom column widths
+        const headers = enabledColumns.map(col => col.label);
+        
+        // Calculate column widths based on content type
+        const pageWidth = doc.internal.pageSize.getWidth() - 28; // A4 width minus margins
+        const columnStyles = {};
+        let totalWidth = 0;
+        
+        // Define base widths for different column types
+        const widthMap = {
+          'uhrzeit': 25,
+          'title': 35,
+          'objectives': 30,
+          'description': 40,
+          'flow': 60, // Ablauf gets more width
+          'risks': 40,
+          'materials': 35,
+          'sonstiges': 20
+        };
+        
+        // Calculate proportional widths
+        enabledColumns.forEach((col, index) => {
+          const baseWidth = widthMap[col.key] || 30;
+          totalWidth += baseWidth;
+        });
+        
+        // Set column styles with proportional widths
+        enabledColumns.forEach((col, index) => {
+          const baseWidth = widthMap[col.key] || 30;
+          const proportionalWidth = (baseWidth / totalWidth) * pageWidth;
+          columnStyles[index] = { 
+            cellWidth: proportionalWidth,
+            overflow: 'linebreak',
+            cellPadding: 2
+          };
+        });
+        
+        doc.autoTable({
+          head: [headers],
+          body: tableData,
+          startY: 30,
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [43, 104, 197], textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [245, 247, 250] },
+          margin: { top: 30 },
+          columnStyles: columnStyles,
+          didParseCell: (data) => {
+            // Enable text wrapping for all cells
+            data.cell.styles.overflow = 'linebreak';
+            data.cell.styles.cellPadding = 2;
+          }
+        });
+
+        // Save
+        const filename = meta.title ? `ZIM-${meta.title}.pdf` : 'ZIM-Papier.pdf';
+        doc.save(filename);
+        this.clearWarn();
+      } catch (error) {
+        this.warn('PDF-Export fehlgeschlagen: ' + error.message);
+        console.error('PDF Export Error:', error);
+      }
+    }
+
+    async exportPDFWithAttachments() {
+      try {
+        if (typeof window.jspdf === 'undefined') {
+          this.warn('PDF-Bibliothek nicht geladen. Bitte Seite neu laden.');
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const meta = this.loadMeta();
+
+        // Part 1: Tabellarische Übersicht (ZIM-Papier)
+        let headerText = 'ZIM-Papier';
+        if (meta.title) headerText += ' - ' + meta.title;
+        if (meta.date) headerText += ' (' + meta.date + ')';
+        doc.setFontSize(16);
+        doc.text(headerText, 14, 20);
+
+        const tableColumns = (this.gridConfig && this.gridConfig.tableColumns) || {
+          uhrzeit: true,
+          title: true,
+          description: false,
+          flow: true,
+          objectives: true,
+          risks: false,
+          materials: true,
+          sonstiges: false
+        };
+
+        const columnDefinitions = [
+          { key: 'uhrzeit', label: 'Uhrzeit' },
+          { key: 'title', label: 'Titel der Methode' },
+          { key: 'objectives', label: 'Lernziele' },
+          { key: 'description', label: 'Kurzbeschreibung' },
+          { key: 'flow', label: 'Ablauf' },
+          { key: 'risks', label: 'Risiken/Tipps' },
+          { key: 'materials', label: 'Material/Technik' },
+          { key: 'sonstiges', label: 'Sonstiges' }
+        ];
+
+        const enabledColumns = columnDefinitions.filter(col => {
+          return tableColumns[col.key] === true;
+        });
+
+        if (enabledColumns.length === 0) {
+          enabledColumns.push({ key: 'uhrzeit', label: 'Uhrzeit' });
+        }
+
+        const activeDays = CONFIG.days.filter(day =>
+          (this.plan.days[day] || []).some(entry => entry && entry.kind !== 'break')
+        );
+
+        const tableData = [];
+        activeDays.forEach(day => {
+          const methods = (this.plan.days[day] || [])
+            .filter(entry => entry && entry.kind !== 'break')
+            .slice()
+            .sort((a, b) => a.startMin - b.startMin);
+
+          methods.forEach(item => {
+            const details = this.getItemDetails(item);
+            const row = [];
+
+            enabledColumns.forEach(col => {
+              let cellContent = '';
+              
+              switch (col.key) {
+                case 'uhrzeit':
+                  cellContent = `${this.formatTimeForPDF(item.startMin)} – ${this.formatTimeForPDF(item.endMin)}`;
+                  break;
+                case 'title':
+                  cellContent = this.escapeTextForPDF(item.title || '');
+                  break;
+                case 'description':
+                  cellContent = this.escapeTextForPDF(details.description);
+                  break;
+                case 'flow':
+                  cellContent = this.escapeTextForPDF(details.flow);
+                  break;
+                case 'objectives':
+                  cellContent = this.escapeTextForPDF(details.objectives);
+                  break;
+                case 'risks':
+                  cellContent = this.escapeTextForPDF(details.risks);
+                  break;
+                case 'materials':
+                  cellContent = this.escapeTextForPDF(details.materials);
+                  break;
+                case 'sonstiges':
+                  cellContent = '';
+                  break;
+                default:
+                  cellContent = '—';
+              }
+              
+              row.push(cellContent || '—');
+            });
+
+            tableData.push(row);
+          });
+        });
+
+        const headers = enabledColumns.map(col => col.label);
+        
+        // Calculate column widths based on content type
+        const pageWidth = doc.internal.pageSize.getWidth() - 28; // A4 width minus margins
+        const columnStyles = {};
+        let totalWidth = 0;
+        
+        // Define base widths for different column types
+        const widthMap = {
+          'uhrzeit': 25,
+          'title': 35,
+          'objectives': 30,
+          'description': 40,
+          'flow': 60, // Ablauf gets more width
+          'risks': 40,
+          'materials': 35,
+          'sonstiges': 20
+        };
+        
+        // Calculate proportional widths
+        enabledColumns.forEach((col, index) => {
+          const baseWidth = widthMap[col.key] || 30;
+          totalWidth += baseWidth;
+        });
+        
+        // Set column styles with proportional widths
+        enabledColumns.forEach((col, index) => {
+          const baseWidth = widthMap[col.key] || 30;
+          const proportionalWidth = (baseWidth / totalWidth) * pageWidth;
+          columnStyles[index] = { 
+            cellWidth: proportionalWidth,
+            overflow: 'linebreak',
+            cellPadding: 2
+          };
+        });
+        
+        doc.autoTable({
+          head: [headers],
+          body: tableData,
+          startY: 30,
+          styles: { fontSize: 8, cellPadding: 2 },
+          headStyles: { fillColor: [43, 104, 197], textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [245, 247, 250] },
+          margin: { top: 30 },
+          columnStyles: columnStyles,
+          didParseCell: (data) => {
+            // Enable text wrapping for all cells
+            data.cell.styles.overflow = 'linebreak';
+            data.cell.styles.cellPadding = 2;
+          }
+        });
+
+        // Part 2: Methoden-Anhang (jede Methode startet auf einer neuen Seite)
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text('Methoden-Anhang', 14, 20);
+
+        let firstMethod = true;
+        activeDays.forEach(day => {
+          const methods = (this.plan.days[day] || [])
+            .filter(item => item && item.kind !== 'break')
+            .slice()
+            .sort((a, b) => a.startMin - b.startMin);
+
+          if (methods.length === 0) return;
+
+          methods.forEach(item => {
+            // Jede Methode beginnt auf einer neuen Seite (nach der ersten Methoden-Seite)
+            if (!firstMethod) {
+              doc.addPage();
+              // Auf Folgeseiten starten wir weiter oben
+              var yPos = 20;
+            } else {
+              // Auf der ersten Methoden-Seite beginnt der Inhalt unterhalb der Überschrift
+              var yPos = 30;
+            }
+            firstMethod = false;
+
+            // Kontext: Tag
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text(day, 14, yPos);
+            yPos += 8;
+
+            const duration = Math.max(CONFIG.baseSlotMinutes, item.endMin - item.startMin);
+            const details = this.getItemDetails(item);
+
+            // Method title
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text(this.escapeTextForPDF(item.title), 14, yPos);
+            yPos += 8;
+
+            // Time and duration
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const timeText = `${this.formatTimeForPDF(item.startMin)}–${this.formatTimeForPDF(item.endMin)} · ${duration} Min`;
+            doc.text(timeText, 14, yPos);
+            yPos += 10;
+
+            // Sections
+            const sections = [
+              { label: 'Kurzbeschreibung', content: details.description },
+              { label: 'Ablauf', content: details.flow },
+              { label: 'Reflexion', content: details.reflection },
+              { label: 'Raumanforderungen & Material/Technik', content: this.combineRequirements(details) },
+              { label: 'Lernziele', content: details.objectives },
+              { label: 'Risiken & Tipps', content: details.risks },
+              { label: 'Kontakt', content: details.contact }
+            ];
+
+            sections.forEach(section => {
+              if (!section.content || !section.content.trim()) return;
+
+              if (yPos > 260) {
+                doc.addPage();
+                yPos = 20;
+              }
+
+              doc.setFontSize(11);
+              doc.setFont(undefined, 'bold');
+              doc.text(section.label + ':', 14, yPos);
+              yPos += 6;
+
+              doc.setFontSize(10);
+              doc.setFont(undefined, 'normal');
+              yPos = this.renderHTMLToPDF(doc, section.content, 14, yPos, 180);
+              yPos += 6;
+            });
+          });
+        });
+
+        // Part 3: Materialien-Anhang
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text('Materialien-Anhang', 14, 20);
+        let yPos = 30;
+
+        const allMethods = [];
+        activeDays.forEach(day => {
+          const methods = (this.plan.days[day] || [])
+            .filter(item => item && item.kind !== 'break')
+            .slice();
+          allMethods.push(...methods);
+        });
+
+        for (const item of allMethods) {
+          const details = this.getItemDetails(item);
+          if (details.resources) {
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Materialien für: ${this.escapeTextForPDF(item.title)}`, 14, yPos);
+            yPos += 8;
+
+            const materialResults = await this.processMaterialFiles(details.resources, doc);
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            materialResults.forEach(result => {
+              if (result.error) {
+                doc.text(`Link: ${result.url} (Fehler: ${result.error})`, 20, yPos);
+                yPos += 6;
+              } else if (result.type === 'link') {
+                doc.text(`Link: ${result.url}`, 20, yPos);
+                yPos += 6;
+              } else {
+                doc.text(`${result.type}: ${result.url} (eingebettet)`, 20, yPos);
+                yPos += 6;
+              }
+            });
+
+            yPos += 5;
+          }
+        }
+
+        // Save
+        const filename = meta.title ? `Seminarplan-${meta.title}.pdf` : 'Seminarplan.pdf';
+        doc.save(filename);
+        this.clearWarn();
+      } catch (error) {
+        this.warn('PDF-Export fehlgeschlagen: ' + error.message);
+        console.error('PDF Export Error:', error);
       }
     }
 

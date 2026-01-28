@@ -1,0 +1,16 @@
+Version 2.0
+
+Datum: 2025-01-27
+
+Hauptänderungen:
+- PDF-Export-Funktionalität hinzugefügt (ZIM-Papier, Vollständig mit Anhängen)
+- HTML-Formatierung in PDF-Export beibehalten
+- Tooltips für vollständige Titel bei Mouseover
+- Materialien-Verarbeitung (Bilder, PDFs, Word, ZIP)
+- Alte Print-Funktionalität entfernt
+
+Technische Bibliotheken:
+- jsPDF 2.5.1
+- jsPDF-AutoTable 3.5.31
+- JSZip 3.10.1
+- mammoth.js 1.6.0

@@ -1,3 +1,9 @@
+<!-- PDF Export Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
 <!-- Seminarplaner (Drag & Drop) -->
 <div class="sp-wrapper">
   <header class="sp-header">
@@ -24,13 +30,7 @@
     </div>
   </div>
 
-  <!-- Print-Header (wird aus obigen Eingaben befüllt) -->
-  <div class="sp-print-header" aria-hidden="true">
-    <div class="sp-ph"><span class="lbl">Seminartitel</span><span id="sp-ph-title" class="val">—</span></div>
-    <div class="sp-ph"><span class="lbl">Datum</span><span id="sp-ph-date" class="val">—</span></div>
-    <div class="sp-ph"><span class="lbl">Seminarnummer</span><span id="sp-ph-number" class="val">—</span></div>
-    <div class="sp-ph"><span class="lbl">Kontakt</span><span id="sp-ph-contact" class="val">—</span></div>
-  </div>
+  <!-- Print-Header removed - now using PDF export -->
 
   <div class="sp-tools">
     <button class="sp-btn sp-btn--icon" id="sp-config" type="button" title="Grid konfigurieren">
@@ -46,10 +46,20 @@
       <span>Import</span>
       <input id="sp-import" type="file" accept="application/json" style="display:none" />
     </label>
-    <button class="sp-btn sp-btn--icon" id="sp-export" type="button" title="Plan als JSON exportieren">
+    <div class="sp-export-group" role="group" aria-label="Export-Optionen">
+      <button class="sp-btn sp-btn--icon" id="sp-export-json" type="button" title="Plan als JSON exportieren">
       <span aria-hidden="true">💾</span>
       <span>Export</span>
     </button>
+      <button class="sp-btn sp-btn--icon" id="sp-export-pdf-zim" type="button" title="ZIM-Papier als PDF exportieren">
+        <span aria-hidden="true">📄</span>
+        <span>PDF (ZIM)</span>
+      </button>
+      <button class="sp-btn sp-btn--icon" id="sp-export-pdf-full" type="button" title="Vollständiges PDF mit Methoden und Materialien exportieren">
+        <span aria-hidden="true">📑</span>
+        <span>PDF (Vollständig)</span>
+      </button>
+    </div>
     <button class="sp-btn sp-btn--icon" id="sp-clear" type="button" title="Gesamten Plan löschen">
       <span aria-hidden="true">🗑️</span>
       <span>Löschen</span>

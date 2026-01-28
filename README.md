@@ -112,6 +112,9 @@ Die Datenbank verwendet ein flexibles XML-basiertes Feldkonzept. Jedes Feld kann
 
 **Daten verwalten:**
 - **Export**: Plan als JSON-Datei exportieren (💾 Export)
+- **PDF Export**: Drei verschiedene PDF-Export-Optionen:
+  - **PDF (ZIM)**: Tabellarische Übersicht des Seminarplans (ZIM-Papier)
+  - **PDF (Vollständig)**: Komplettes PDF mit tabellarischer Übersicht, Methoden-Anhang und Materialien-Anhang
 - **Import**: Exportierte JSON-Datei wieder importieren (📥 Import)
 - **Löschen**: Gesamten Plan löschen (🗑️ Löschen)
 
@@ -145,8 +148,11 @@ Die Platzhalter müssen exakt mit den Feldnamen in `preset.xml` übereinstimmen.
 - ✅ **Import/Export**: JSON-basierter Datenaustausch
 - ✅ **Tabellenansicht**: ZIM-Papier mit konfigurierbaren Spalten
 - ✅ **Meta-Informationen**: Seminardetails im Header
- - ✅ **Filter & Suche**: Freitextsuche plus Filter für Tags, Seminarphase, Gruppengröße, Zeitbedarf und kognitive Dimension
- - ✅ **Kognitive Farbcodierung**: Methoden werden je nach kognitiver Dimension (Erinnern → Erschaffen) in einer Blau‑bis‑Rot-Skala eingefärbt – sowohl in der Sidebar als auch im Grid
+- ✅ **Filter & Suche**: Freitextsuche plus Filter für Tags, Seminarphase, Gruppengröße, Zeitbedarf und kognitive Dimension
+- ✅ **Kognitive Farbcodierung**: Methoden werden je nach kognitiver Dimension (Erinnern → Erschaffen) in einer Blau‑bis‑Rot-Skala eingefärbt – sowohl in der Sidebar als auch im Grid
+- ✅ **PDF-Export**: Drei Export-Varianten (ZIM-Papier, Vollständig mit Anhängen)
+- ✅ **HTML-Formatierung in PDF**: Erhaltung von Formatierungen (fett, kursiv, Listen, Absätze) aus Textfeldern im PDF
+- ✅ **Tooltips**: Vollständige Titel werden bei Mouseover im Grid angezeigt
 
 ### Methodenkarten Features
 
@@ -221,11 +227,42 @@ Soll die Datenbankstruktur erweitert oder geändert werden:
    - `singletemplate.html`: Anzeige hinzufügen (mit `data-hide-if-empty` für optionale Felder)
    - `listtemplate.html`: Falls für Seminarplaner relevant, als `sp-hidden` Datenfeld hinzufügen
 
+## 📄 PDF-Export-Funktionalität
+
+Der Seminarplaner bietet drei verschiedene PDF-Export-Optionen:
+
+### 1. PDF (ZIM) – Tabellarische Übersicht
+- Erstellt eine tabellarische Übersicht des Seminarplans (ZIM-Papier)
+- Enthält alle konfigurierten Spalten (Uhrzeit, Titel, Ablauf, etc.)
+- Optimierte Spaltenbreiten für bessere Lesbarkeit
+- Enthält Meta-Informationen (Seminartitel, Datum, Seminarnummer, Kontakt)
+
+### 2. PDF (Vollständig) – Mit Anhängen
+- **Tabellarische Übersicht**: Wie PDF (ZIM)
+- **Methoden-Anhang**: Alle geplanten Methoden mit vollständigen Details
+  - Jede Methode beginnt auf einer neuen Seite
+  - Enthält Titel, Zeit, Dauer, Beschreibung, Ablauf, Lernziele, etc.
+  - HTML-Formatierungen (fett, kursiv, Listen, Absätze) werden beibehalten
+- **Materialien-Anhang**: Verarbeitung von Materialien aus den Methoden
+  - **Bilder**: Werden direkt als Bilder eingebettet
+  - **PDF-Dateien**: Werden als klickbare Links eingefügt
+  - **Word-Dateien**: Werden in Text konvertiert und eingefügt
+  - **ZIP-Archive**: Werden entpackt und deren Inhalte verarbeitet
+  - Bei Fehlern beim Laden wird ein Link als Fallback angezeigt
+
+### Technische Details
+
+- **HTML-Formatierung**: Textfelder mit HTML-Formatierung (z.B. `<strong>`, `<em>`, `<ul>`, `<p>`) werden im PDF korrekt dargestellt
+- **Listen-Abstände**: Kompakte Darstellung von Listen für bessere Lesbarkeit
+- **Seitenumbrüche**: Automatische Seitenumbrüche bei langen Inhalten
+- **Bibliotheken**: Verwendet jsPDF, jsPDF-AutoTable, JSZip und mammoth.js
+
 ## 📝 Hinweise
 
-- **Print-Funktionalität**: Die Print-CSS-Definitionen wurden entfernt. Die ausgedruckte Variante des ZIM-Papiers soll später komplett neu entwickelt werden.
+- **Print-Funktionalität**: Die alte browserbasierte Print-Funktionalität wurde entfernt und durch JavaScript-basierte PDF-Generierung ersetzt
 - **Browser-Support**: Moderne Browser mit LocalStorage-Unterstützung (Chrome, Firefox, Safari, Edge)
-- **Daten-Persistenz**: Der Seminarplaner speichert Daten im Browser-LocalStorage. Bei Export/Import müssen JSON-Dateien verwendet werden.
+- **Daten-Persistenz**: Der Seminarplaner speichert Daten im Browser-LocalStorage. Bei Export/Import müssen JSON-Dateien verwendet werden
+- **PDF-Materialien**: PDF-Dateien aus Materialien werden als klickbare Links eingefügt (keine Einbettung)
 
 ## 🤝 Beitragen
 
@@ -235,6 +272,38 @@ Bei Änderungen an Templates:
 - Kommentare nach dem Muster: `<!-- SECTION: Zusammenfassung -->`
 - Placeholder im Format `[[PascalCase]]`
 - CSS-Klassen mit `ig-*` oder `sp-*` Präfix
+
+## 📋 Changelog
+
+### Version 2.0 – PDF-Export und UI-Verbesserungen
+
+**Neue Features:**
+- ✅ **PDF-Export**: Drei Export-Varianten hinzugefügt
+  - PDF (ZIM): Tabellarische Übersicht des Seminarplans
+  - PDF (Vollständig): Komplettes PDF mit Methoden- und Materialien-Anhang
+- ✅ **HTML-Formatierung in PDF**: Erhaltung von Formatierungen (fett, kursiv, Listen, Absätze) aus Textfeldern
+- ✅ **Tooltips**: Vollständige Titel werden bei Mouseover im Grid angezeigt
+- ✅ **Materialien-Verarbeitung**: 
+  - Bilder werden direkt eingebettet
+  - PDF-Dateien werden als klickbare Links eingefügt
+  - Word-Dateien werden in Text konvertiert
+  - ZIP-Archive werden entpackt und verarbeitet
+
+**Verbesserungen:**
+- ✅ Kompakte Listen-Abstände im PDF für bessere Lesbarkeit
+- ✅ Optimierte Spaltenbreiten in PDF-Tabellen (insbesondere "Ablauf"-Spalte)
+- ✅ Seitenumbrüche für jede Methode im Methoden-Anhang
+- ✅ Verbesserte Positionierung von Überschriften im PDF
+
+**Entfernt:**
+- ❌ Alte browserbasierte Print-Funktionalität (ersetzt durch PDF-Export)
+- ❌ Print-CSS-Definitionen
+
+**Technische Änderungen:**
+- Integration von jsPDF und jsPDF-AutoTable für PDF-Generierung
+- Integration von JSZip für ZIP-Verarbeitung
+- Integration von mammoth.js für Word-Datei-Konvertierung
+- Custom HTML-to-PDF-Rendering-Funktion für Formatierungserhaltung
 
 ## 📄 Lizenz
 

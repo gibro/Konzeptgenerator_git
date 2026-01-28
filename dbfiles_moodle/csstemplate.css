@@ -340,6 +340,45 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
+  cursor: help;
+}
+
+/* Tooltip für vollständigen Titel im Grid-Item */
+.sp-item .sp-title:hover::after {
+  content: attr(data-full-title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: normal;
+  max-width: 300px;
+  width: max-content;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  pointer-events: none;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.sp-item .sp-title:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  border: 6px solid transparent;
+  border-top-color: #1f2937;
+  z-index: 1001;
+  pointer-events: none;
 }
 
 .sp-item .sp-meta {
@@ -432,6 +471,45 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
+  cursor: help;
+}
+
+/* Tooltip für vollständigen Titel in Placeholder-Items */
+.sp-item-placeholder .sp-placeholder-title:hover::after {
+  content: attr(data-full-title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: normal;
+  max-width: 300px;
+  width: max-content;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  pointer-events: none;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.sp-item-placeholder .sp-placeholder-title:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  border: 6px solid transparent;
+  border-top-color: #1f2937;
+  z-index: 1001;
+  pointer-events: none;
 }
 
 .sp-placeholder-meta {
@@ -617,26 +695,7 @@
   background: #f3f4f6;
 }
 
-.sp-btn--print {
-  appearance: none;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: 10px;
-  border: 1px solid var(--color-border-light);
-  background: var(--color-background);
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sp-btn--print:hover {
-  background: #f3f4f6;
-}
-
-.sp-btn--print:focus-visible {
-  outline: 2px solid rgba(14, 165, 233, .7);
-  outline-offset: 2px;
-}
+/* Print button styles removed - now using PDF export */
 /* Sidebar */
 .sp-sidebar {
   border: 1px solid var(--color-border);
@@ -726,6 +785,45 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
+  position: relative;
+  cursor: help;
+}
+
+/* Tooltip für vollständigen Titel in der Karte */
+.sp-card .sp-titletext:hover::after {
+  content: attr(data-full-title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: normal;
+  max-width: 300px;
+  width: max-content;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  pointer-events: none;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.sp-card .sp-titletext:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  border: 6px solid transparent;
+  border-top-color: #1f2937;
+  z-index: 1001;
+  pointer-events: none;
 }
 
 .sp-card:active {
@@ -1411,6 +1509,13 @@
   min-width: 64px;
   font-weight: 600;
 }
+
+/* Export Group */
+.sp-export-group {
+  display: inline-flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+}
 /* Grid and Layout */
 .sp-grid {
   display: grid;
@@ -1485,131 +1590,7 @@
   font-size: 14px;
 }
 
-/* Print Styles */
-
-.sp-table-section {
-  display: block;
-  margin: var(--spacing-xl) 0;
-  overflow-x: auto;
-}
-
-.sp-table-section-title {
-  display: block;
-  margin: var(--spacing-xxl) 0 var(--spacing-md);
-  font-size: var(--font-size-xxl);
-  font-weight: 700;
-  color: #111827;
-  border-bottom: 2px solid var(--color-border);
-  padding-bottom: var(--spacing-sm);
-}
-
-.sp-table-day {
-  margin: 0 0 var(--spacing-xl);
-}
-
-.sp-table-day__title {
-  margin: 0 0 10px;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.sp-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: var(--color-background);
-  border: 1px solid #d1d5db;
-  font-size: var(--font-size-base);
-}
-
-.sp-table th,
-.sp-table td {
-  border: 1px solid #d1d5db;
-  padding: var(--spacing-sm) 10px;
-  text-align: left;
-  vertical-align: top;
-}
-
-.sp-table th {
-  background: #f8fafc;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.sp-table tbody tr:nth-child(even) {
-  background: #f9fafb;
-}
-
-.sp-print-day {
-  margin: 0 0 32px;
-}
-
-.sp-print-day__title {
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  margin: var(--spacing-xxl) 0 var(--spacing-md);
-}
-
-.sp-print-day:first-child .sp-print-day__title {
-  margin-top: 0;
-}
-
-.sp-print-card {
-  display: block;
-  border: 1px solid var(--color-border);
-  border-radius: var(--spacing-lg);
-  padding: var(--spacing-lg);
-  background: var(--color-background);
-  margin: 0 0 var(--spacing-lg);
-}
-
-.sp-print-card__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-md);
-}
-
-.sp-print-card__heading {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.sp-print-card__name {
-  margin: 0;
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: #111827;
-}
-
-.sp-print-card__time {
-  font-size: var(--font-size-base);
-  color: #4b5563;
-}
-
-.sp-print-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-.sp-print-card__section h3 {
-  margin: 0 0 var(--spacing-xs);
-  font-size: .95rem;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.sp-print-card__section div {
-  font-size: var(--font-size-base);
-  color: #374151;
-  line-height: 1.5;
-}
-
-.sp-print-header {
-  display: none;
-}
+/* Print Styles removed - now using PDF export */
 
 /* =========================================
    SINGLE TEMPLATE (Methodenkarte)
@@ -1663,9 +1644,7 @@
   color: var(--color-background);
 }
 
-.no-print {
-  display: block;
-}
+/* .no-print removed - no longer needed */
 
 .ig-card {
   background: var(--card-bg);
