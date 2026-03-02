@@ -1,6 +1,6 @@
 # Konzeptgenerator – Methodenkarten-Datenbank
 
-Eine webbasierte Datenbank zur Verwaltung und Planung von Seminarmethoden für die IG Metall. Das System ermöglicht es, Methodenkarten zu erstellen, zu verwalten und in einem interaktiven Seminarplaner zu organisieren.
+Eine webbasierte Datenbank zur Verwaltung und Planung von Seminarmethoden. Das System ermöglicht es, Methodenkarten zu erstellen, zu verwalten und in einem interaktiven Seminarplaner zu organisieren.
 
 ## Installation
    - erzeuge ein zip aus den vorliegenden Dateien, ohne README und AGENTS und LICENSE
