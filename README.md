@@ -3,11 +3,10 @@
 Eine webbasierte Datenbank zur Verwaltung und Planung von Seminarmethoden. Das System ermöglicht es, Methodenkarten zu erstellen, zu verwalten und in einem interaktiven Seminarplaner zu organisieren.
 
 ## Installation
-   - erzeuge ein zip aus den vorliegenden Dateien, ohne README und AGENTS und LICENSE
-   - Erstelle eine Datenbank-Aktivität in deinem Moodle und klicke auf speichern und anzeigen in der Aktivitätserstellung
+   - Erstelle eine Datenbank-Aktivität in deinem Moodlekurs und klicke auf speichern und anzeigen in der Aktivitätserstellung
    - Klicke auf Vorlagensatz importieren
-   - Lade die erzeugte zip Datei hoch
-   - Beginne Einträge für Einheiten/Methoden zu schreiben
+   - Lade die konzeptgenerator.zip hoch
+   - Beginne Einträge für Einheiten/Methoden zu schreiben oder importiere aus db_entries eine der zip oder csv Dateien
    - Anschließend kannst du sie in der Listenansicht deiner Datenbank Verschieben.
 
 ## 🎯 Zentralen Funktionen
